@@ -1,38 +1,44 @@
 import { Alert, Platform } from 'react-native';
-const BASE_URL = 'http://192.168.0.18:3000';
 
-async function validarCampos({ nome, sobrenome, email, celular, senha, cnh, motorista = false }) {
+const BASE_URL = 'http://localhost:3000'; // usa o IP da rede local, não localhost se for em celular
+
+async function validarCampos({ nome, email, senha, endereco, num_telefone }) {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const senhaRegex = /^(?=.*[A-Z])(?=.*\d).+$/;
-  const celularRegex = /^\d{10,11}$/;
-  const cnhRegex = /^\d{11}$/;
+  const telefoneRegex = /^\(?\d{2}\)?\s?\d{4,5}-?\d{4}$/;
 
-  if (
-    !nome?.trim() ||
-    !sobrenome?.trim() ||
-    !email?.trim() ||
-    !celular?.trim() ||
-    !senha?.trim() ||
-    (motorista && !cnh?.trim())
-  ) {
+  if (!nome?.trim() || !email?.trim() || !senha?.trim() || !endereco?.trim() || !num_telefone?.trim()) {
     throw new Error('Por favor, preencha todos os campos.');
   }
 
   if (!emailRegex.test(email)) throw new Error('Por favor, insira um e-mail válido.');
   if (!senhaRegex.test(senha)) throw new Error('Senha deve conter pelo menos 1 letra maiúscula e 1 número.');
-  if (!celularRegex.test(celular)) throw new Error('Insira um número válido (com DDD).');
-  if (motorista && !cnhRegex.test(cnh)) throw new Error('CNH inválida. Deve conter 11 dígitos numéricos.');
+  if (!telefoneRegex.test(num_telefone)) throw new Error('Número de telefone inválido.');
 }
 
 async function cadastrarUsuario(dados, motorista = false) {
   const { router } = dados;
   try {
-    await validarCampos({ ...dados, motorista });
+    // Validação básica
+    // await validarCampos(dados);
 
-    const response = await fetch(`${BASE_URL}/cadastrar`, {
+    // Endpoint
+    const endpoint = motorista ? '/users/motorista' : '/users/passageiro';
+
+    // Corpo da requisição
+    const body = {
+      nome: dados.nome,
+      email: dados.email,
+      senha: dados.senha,
+      endereco: 'dr dido fontes,937',
+      num_telefone: '27997330514',
+    };
+
+    // Requisição
+    const response = await fetch(`${BASE_URL}${endpoint}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(dados),
+      body: JSON.stringify(body),
     });
 
     const data = await response.json();
@@ -46,6 +52,7 @@ async function cadastrarUsuario(dados, motorista = false) {
       router.push('./login');
     }
   } catch (error) {
+    console.log('Erro no cadastro:', error);
     if (Platform.OS === 'web') {
       alert(error.message || 'Erro inesperado.');
     } else {
@@ -54,22 +61,21 @@ async function cadastrarUsuario(dados, motorista = false) {
   }
 }
 
-export async function cadastroPassageiro({ nome, sobrenome, email, celular, senha, router }) {
-  await cadastrarUsuario({ nome, sobrenome, email, celular, senha, router });
+// Funções exportadas
+export async function cadastroPassageiro({ nome, email, senha, endereco, num_telefone, router }) {
+  await cadastrarUsuario({ nome, email, senha, endereco, num_telefone, router });
 }
 
-export async function cadastroMotorista({ nome, sobrenome, email, celular, senha, cnh, router }) {
-  await cadastrarUsuario({ nome, sobrenome, email, celular, senha, cnh, router }, true);
+export async function cadastroMotorista({ nome, email, senha, endereco, num_telefone, router }) {
+  await cadastrarUsuario({ nome, email, senha, endereco, num_telefone, router }, true);
 }
 
+// LOGIN
 async function validarCamposLogin({ email, senha }) {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const senhaRegex = /^(?=.*[A-Z])(?=.*\d).+$/;
 
-  if (!email?.trim() || !senha?.trim()) {
-    throw new Error('Por favor, preencha todos os campos.');
-  }
-
+  if (!email?.trim() || !senha?.trim()) throw new Error('Por favor, preencha todos os campos.');
   if (!emailRegex.test(email)) throw new Error('Por favor, insira um e-mail válido.');
   if (!senhaRegex.test(senha)) throw new Error('Senha deve conter pelo menos 1 letra maiúscula e 1 número.');
 }
@@ -78,7 +84,6 @@ export async function login({ email, senha, router }) {
   try {
     await validarCamposLogin({ email, senha });
 
-    const BASE_URL = 'http://192.168.0.18:3000';
     const response = await fetch(`${BASE_URL}/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -94,6 +99,7 @@ export async function login({ email, senha, router }) {
       Alert.alert('Erro', data.message || 'Falha no login.');
     }
   } catch (error) {
+    console.log('Erro no login:', error);
     Alert.alert('Erro', error.message || 'Erro inesperado.');
   }
 }
