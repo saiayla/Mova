@@ -1,40 +1,50 @@
 import { Alert, Platform } from 'react-native';
 
-const BASE_URL = 'http://localhost:3000'; // usa o IP da rede local, não localhost se for em celular
+const BASE_URL = 'http://localhost:3000';
 
-async function validarCampos({ nome, email, senha, endereco, num_telefone }) {
+async function validarCampos(dados = {}) {
+  if (typeof dados !== 'object' || dados === null) {
+    throw new Error('Dados inválidos para validação.');
+  }
+
+  const { nome, email, num_telefone, endereco, senha, cnh, motorista = false } = dados;
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const senhaRegex = /^(?=.*[A-Z])(?=.*\d).+$/;
-  const telefoneRegex = /^\(?\d{2}\)?\s?\d{4,5}-?\d{4}$/;
+  const num_telefoneRegex = /^\d{10,11}$/;
+  const cnhRegex = /^\d{11}$/;
 
-  if (!nome?.trim() || !email?.trim() || !senha?.trim() || !endereco?.trim() || !num_telefone?.trim()) {
+  if (
+    !nome?.trim() ||
+    !email?.trim() ||
+    !num_telefone?.trim() ||
+    !endereco?.trim() ||
+    (motorista && !cnh?.trim()) ||
+    !senha?.trim()
+  ) {
     throw new Error('Por favor, preencha todos os campos.');
   }
 
   if (!emailRegex.test(email)) throw new Error('Por favor, insira um e-mail válido.');
   if (!senhaRegex.test(senha)) throw new Error('Senha deve conter pelo menos 1 letra maiúscula e 1 número.');
-  if (!telefoneRegex.test(num_telefone)) throw new Error('Número de telefone inválido.');
+  if (!num_telefoneRegex.test(num_telefone)) throw new Error('Insira um número válido (com DDD).');
+  if (motorista && !cnhRegex.test(cnh)) throw new Error('CNH inválida. Deve conter 11 dígitos numéricos.');
 }
 
-async function cadastrarUsuario(dados, motorista = false) {
-  const { router } = dados;
+async function cadastrarUsuario(dados, motorista = false, router) {
   try {
-    // Validação básica
-    // await validarCampos(dados);
+    await validarCampos({ ...dados, motorista });
 
-    // Endpoint
     const endpoint = motorista ? '/users/motorista' : '/users/passageiro';
 
-    // Corpo da requisição
     const body = {
       nome: dados.nome,
       email: dados.email,
+      num_telefone: dados.num_telefone,
+      endereco: dados.endereco,
       senha: dados.senha,
-      endereco: 'dr dido fontes,937',
-      num_telefone: '27997330514',
+      ...(motorista && { cnh: dados.cnh }),
     };
 
-    // Requisição
     const response = await fetch(`${BASE_URL}${endpoint}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -43,14 +53,27 @@ async function cadastrarUsuario(dados, motorista = false) {
 
     const data = await response.json();
 
-    if (!response.ok) throw new Error(data.message || 'Erro ao cadastrar.');
+    if (!response.ok) {
+      if (response.status === 409) {
+        if (Platform.OS === 'web') {
+          alert('Erro! Usuário já existe.');
+        } else {
+          Alert.alert('Erro', 'Usuário já existe!');
+        }
+      } else {
+        Alert.alert("Erro", data.message || "Erro ao cadastrar.");
+      }
+      return;
+    }
 
     if (Platform.OS === 'web') {
       alert('Sucesso! Cadastro realizado.');
+      router.push('/login');
     } else {
       Alert.alert('Sucesso', 'Cadastro realizado!');
-      router.push('./login');
+      router.push('/login');
     }
+
   } catch (error) {
     console.log('Erro no cadastro:', error);
     if (Platform.OS === 'web') {
@@ -61,30 +84,28 @@ async function cadastrarUsuario(dados, motorista = false) {
   }
 }
 
-// Funções exportadas
-export async function cadastroPassageiro({ nome, email, senha, endereco, num_telefone, router }) {
-  await cadastrarUsuario({ nome, email, senha, endereco, num_telefone, router });
+export async function cadastroPassageiro({ nome, email, num_telefone, endereco, senha, router }) {
+  await cadastrarUsuario({ nome, email, num_telefone, endereco, senha }, false, router);
 }
 
-export async function cadastroMotorista({ nome, email, senha, endereco, num_telefone, router }) {
-  await cadastrarUsuario({ nome, email, senha, endereco, num_telefone, router }, true);
+export async function cadastroMotorista({ nome, email, num_telefone, endereco, senha, cnh, router }) {
+  await cadastrarUsuario({ nome, email, num_telefone, endereco, senha, cnh, }, true, router);
 }
 
 // LOGIN
 async function validarCamposLogin({ email, senha }) {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  const senhaRegex = /^(?=.*[A-Z])(?=.*\d).+$/;
 
   if (!email?.trim() || !senha?.trim()) throw new Error('Por favor, preencha todos os campos.');
   if (!emailRegex.test(email)) throw new Error('Por favor, insira um e-mail válido.');
-  if (!senhaRegex.test(senha)) throw new Error('Senha deve conter pelo menos 1 letra maiúscula e 1 número.');
 }
 
 export async function login({ email, senha, router }) {
   try {
     await validarCamposLogin({ email, senha });
 
-    const response = await fetch(`${BASE_URL}/login`, {
+    const BASE_URL = 'http://localhost:3000';
+    const response = await fetch(`${BASE_URL}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, senha }),
@@ -93,13 +114,27 @@ export async function login({ email, senha, router }) {
     const data = await response.json();
 
     if (response.ok) {
-      Alert.alert('Sucesso', 'Login realizado!');
-      router.push('../index');
+      if (Platform.OS === 'web') {
+        alert('Sucesso! Login realizado.');
+      } else {
+        Alert.alert('Sucesso', 'Login realizado!');
+      }
+      router.push('/');
     } else {
-      Alert.alert('Erro', data.message || 'Falha no login.');
+      const message = data.message || 'Falha no login.';
+      if (Platform.OS === 'web') {
+        alert(message);
+      } else {
+        Alert.alert('Erro', message);
+      }
+      return;
     }
   } catch (error) {
-    console.log('Erro no login:', error);
-    Alert.alert('Erro', error.message || 'Erro inesperado.');
+    const message = error instanceof Error ? error.message : String(error);
+    if (Platform.OS === 'web') {
+      alert(message);
+    } else {
+      Alert.alert('Erro', message);
+    }
   }
 }

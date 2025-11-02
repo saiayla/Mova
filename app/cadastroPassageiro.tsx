@@ -1,19 +1,18 @@
-import React from 'react';
-import { useState } from 'react';
-import { Text, TouchableOpacity, View, TextInput } from 'react-native';
-import { globalStyles as styles } from './style';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { cadastroPassageiro } from './script.js'
+import React, { useState } from 'react';
+import { Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { cadastroPassageiro } from './script.js';
+import { globalStyles as styles } from './style';
 
 export default function passageiro() {
     const router = useRouter();
 
-    const [email, setEmail] = useState('');
-    const [senha, setSenha] = useState('');
     const [nome, setNome] = useState('');
-    const [sobrenome, setSobrenome] = useState('');
-    const [celular, setCelular] = useState('');
+    const [email, setEmail] = useState('');
+    const [num_telefone, setNum_telefone] = useState('');
+    const [endereco, setEndereco] = useState('');
+    const [senha, setSenha] = useState('');
 
     return (
         <LinearGradient colors={['#1974F3', '#85E0FA']} style={styles.container}>
@@ -25,23 +24,23 @@ export default function passageiro() {
                         <TextInput value={nome} onChangeText={setNome} style={styles.input} />
                     </View>
                     <View style={{ gap: 5, width: '80%' }}>
-                        <Text>Sobrenome</Text>
-                        <TextInput value={sobrenome} onChangeText={setSobrenome} style={styles.input} />
-                    </View>
-                    <View style={{ gap: 5, width: '80%' }}>
                         <Text>E-mail</Text>
                         <TextInput value={email} onChangeText={setEmail} style={styles.input} />
                     </View>
                     <View style={{ gap: 5, width: '80%' }}>
-                        <Text>celular</Text>
-                        <TextInput value={celular} onChangeText={setCelular} secureTextEntry style={styles.input} />
+                        <Text>Celular</Text>
+                        <TextInput value={num_telefone} onChangeText={setNum_telefone} style={styles.input}  keyboardType="phone-pad" />
+                    </View>
+                    <View style={{ gap: 5, width: '80%' }}>
+                        <Text>Endereço</Text>
+                        <TextInput value={endereco} onChangeText={setEndereco} style={styles.input} />
                     </View>
                     <View style={{ gap: 5, width: '80%' }}>
                         <Text>Senha</Text>
                         <TextInput value={senha} onChangeText={setSenha} secureTextEntry style={styles.input} />
                     </View>
                     <TouchableOpacity style={styles.Button} onPress={() =>
-                        cadastroPassageiro({ nome, sobrenome, email, celular, senha, router })}>
+                        cadastroPassageiro({ nome, email, num_telefone, endereco, senha, router })}>
                         <Text style={styles.buttonText}>Cadastrar</Text>
                     </TouchableOpacity>
                 </View>
