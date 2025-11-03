@@ -1,10 +1,10 @@
-import React from 'react';
-import { useState } from 'react';
-import {Text, TouchableOpacity, View, TextInput} from 'react-native';
-import { globalStyles as styles } from './style';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
+import React, { useState } from 'react';
+import { Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { login } from './script';
+import  BotaoVoltar from './script';
+import { globalStyles as styles } from './style';
 
 export default function LoginScreen() {
     const router = useRouter();
@@ -14,6 +14,10 @@ export default function LoginScreen() {
 
     return (
         <LinearGradient colors={['#1974F3', '#85E0FA']} style={styles.container}>
+            <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 20 }}>
+                <BotaoVoltar />
+                <Text style={{ fontSize: 15 }}>Voltar</Text>
+           </View>
             <View style={styles.form}>
                 <Text style={styles.title2}>Login</Text>
                 <View style={{width: '100%', gap: 30, padding: 20, alignItems: 'center'}}>

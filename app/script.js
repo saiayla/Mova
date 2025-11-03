@@ -1,6 +1,22 @@
-import { Alert, Platform } from 'react-native';
+import { Alert, Platform, TouchableOpacity } from 'react-native';
+import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
 
-const BASE_URL = 'http://localhost:3000';
+
+export default function BotaoVoltar() {
+    const navigation = useNavigation();
+
+    return (
+        <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={{ padding: 5}}
+        >
+            <Ionicons name="arrow-back" size={15} color="black" />
+        </TouchableOpacity>
+    );
+}
+
+const BASE_URL = 'http://192.168.100.192:3000';
 
 async function validarCampos(dados = {}) {
   if (typeof dados !== 'object' || dados === null) {
@@ -100,11 +116,50 @@ async function validarCamposLogin({ email, senha }) {
   if (!emailRegex.test(email)) throw new Error('Por favor, insira um e-mail válido.');
 }
 
+// export async function login({ email, senha, router }) {
+//   try {
+//     await validarCamposLogin({ email, senha });
+
+//     const BASE_URL = 'http://192.168.100.192:3000';
+//     const response = await fetch(`${BASE_URL}/auth/login`, {
+//       method: 'POST',
+//       headers: { 'Content-Type': 'application/json' },
+//       body: JSON.stringify({ email, senha }),
+//     });
+
+//     const data = await response.json();
+
+//     if (response.ok) {
+//       if (Platform.OS === 'web') {
+//         alert('Sucesso! Login realizado.');
+//       } else {
+//         Alert.alert('Sucesso', 'Login realizado!');
+//       }
+//       router.push('/registroVeiculo');
+//     } else {
+//       const message = data.message || 'Falha no login.';
+//       if (Platform.OS === 'web') {
+//         alert(message);
+//       } else {
+//         Alert.alert('Erro', message);
+//       }
+//       return;
+//     }
+//   } catch (error) {
+//     const message = error instanceof Error ? error.message : String(error);
+//     if (Platform.OS === 'web') {
+//       alert(message);
+//     } else {
+//       Alert.alert('Erro', message);
+//     }
+//   }
+// }
+
 export async function login({ email, senha, router }) {
   try {
     await validarCamposLogin({ email, senha });
 
-    const BASE_URL = 'http://localhost:3000';
+    const BASE_URL = 'http://192.168.100.192:3000';
     const response = await fetch(`${BASE_URL}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -119,7 +174,15 @@ export async function login({ email, senha, router }) {
       } else {
         Alert.alert('Sucesso', 'Login realizado!');
       }
-      router.push('/');
+
+      if (data.tipo === 'motorista') {
+        router.push('/registroVeiculo');
+      } else if (data.tipo === 'passageiro') {
+        router.push('/solicitarViagem');
+      } else {
+        router.push('/');
+      }
+
     } else {
       const message = data.message || 'Falha no login.';
       if (Platform.OS === 'web') {
@@ -127,7 +190,6 @@ export async function login({ email, senha, router }) {
       } else {
         Alert.alert('Erro', message);
       }
-      return;
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
@@ -138,3 +200,4 @@ export async function login({ email, senha, router }) {
     }
   }
 }
+

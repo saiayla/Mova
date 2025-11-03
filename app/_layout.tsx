@@ -15,10 +15,11 @@ export default function RootLayout() {
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="login" options={{ headerShown: false }} />
         <Stack.Screen name="cadastroPassageiro" options={{ headerShown: false }} />
         <Stack.Screen name="cadastroMotorista" options={{ headerShown: false }} />
+        <Stack.Screen name="registroVeiculo" options={{ headerShown: false }} />
+        <Stack.Screen name="solicitarViagem" options={{ headerShown: false }} />
       </Stack>
       <StatusBar style="auto" />
     </ThemeProvider>

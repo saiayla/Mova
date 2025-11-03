@@ -7,6 +7,7 @@ export const globalStyles = StyleSheet.create({
     flexDirection: 'column',
     justifyContent: 'center',
     padding: 20,
+    backgroundColor: '#FFFFFF',
   },
   form: {
     paddingVertical: 40,
@@ -24,6 +25,14 @@ export const globalStyles = StyleSheet.create({
     borderRadius: 5,
     padding: 10,
   },
+  input2: {
+    width: 250,
+    borderWidth: 1,
+    borderColor: '#E6EEF8',
+    borderRadius: 15,
+    padding: 10,
+    backgroundColor: '#F8FAFF',
+  },
   Button:{
     paddingHorizontal: 20,
     paddingVertical: 10,
@@ -37,8 +46,8 @@ export const globalStyles = StyleSheet.create({
     fontSize: 16,
   },
   logo: {
-    width: 660,
-    height: 300,
+    width: 640,
+    height: 280,
     marginBottom: 40,
   },
   title: {
@@ -56,6 +65,12 @@ export const globalStyles = StyleSheet.create({
     fontSize: 30,
     fontWeight: 'bold',
     color: '#1F7AF3',
+    marginBottom: 5
+  },
+  title3: {
+    fontSize: 30,
+    fontWeight: 'bold',
+    color: '#000000',
     marginBottom: 5
   },
 });
