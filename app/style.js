@@ -73,4 +73,11 @@ export const globalStyles = StyleSheet.create({
     color: '#000000',
     marginBottom: 5
   },
+  label: {
+    fontWeight: 'bold',
+    marginTop: 10
+  },
+  map: { 
+    flex: 1 
+  },
 });

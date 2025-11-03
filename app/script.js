@@ -1,6 +1,6 @@
-import { Alert, Platform, TouchableOpacity } from 'react-native';
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
+import { Alert, Platform, TouchableOpacity } from 'react-native';
 
 
 export default function BotaoVoltar() {
@@ -16,7 +16,8 @@ export default function BotaoVoltar() {
     );
 }
 
-const BASE_URL = 'http://192.168.100.192:3000';
+// const BASE_URL = 'http://192.168.100.192:3000';
+const BASE_URL = 'http://localhost:3000';
 
 async function validarCampos(dados = {}) {
   if (typeof dados !== 'object' || dados === null) {
@@ -40,7 +41,13 @@ async function validarCampos(dados = {}) {
     throw new Error('Por favor, preencha todos os campos.');
   }
 
+  const nomePartes = nome.trim().split(' ').filter(Boolean);
+  if (nomePartes.length < 2) {
+    throw new Error('Por favor, insira o nome completo.');
+  }
+
   if (!emailRegex.test(email)) throw new Error('Por favor, insira um e-mail válido.');
+  if (senha.length < 6) throw new Error('A senha deve ter no mínimo 6 caracteres.');
   if (!senhaRegex.test(senha)) throw new Error('Senha deve conter pelo menos 1 letra maiúscula e 1 número.');
   if (!num_telefoneRegex.test(num_telefone)) throw new Error('Insira um número válido (com DDD).');
   if (motorista && !cnhRegex.test(cnh)) throw new Error('CNH inválida. Deve conter 11 dígitos numéricos.');
@@ -108,7 +115,6 @@ export async function cadastroMotorista({ nome, email, num_telefone, endereco, s
   await cadastrarUsuario({ nome, email, num_telefone, endereco, senha, cnh, }, true, router);
 }
 
-// LOGIN
 async function validarCamposLogin({ email, senha }) {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -116,50 +122,12 @@ async function validarCamposLogin({ email, senha }) {
   if (!emailRegex.test(email)) throw new Error('Por favor, insira um e-mail válido.');
 }
 
-// export async function login({ email, senha, router }) {
-//   try {
-//     await validarCamposLogin({ email, senha });
-
-//     const BASE_URL = 'http://192.168.100.192:3000';
-//     const response = await fetch(`${BASE_URL}/auth/login`, {
-//       method: 'POST',
-//       headers: { 'Content-Type': 'application/json' },
-//       body: JSON.stringify({ email, senha }),
-//     });
-
-//     const data = await response.json();
-
-//     if (response.ok) {
-//       if (Platform.OS === 'web') {
-//         alert('Sucesso! Login realizado.');
-//       } else {
-//         Alert.alert('Sucesso', 'Login realizado!');
-//       }
-//       router.push('/registroVeiculo');
-//     } else {
-//       const message = data.message || 'Falha no login.';
-//       if (Platform.OS === 'web') {
-//         alert(message);
-//       } else {
-//         Alert.alert('Erro', message);
-//       }
-//       return;
-//     }
-//   } catch (error) {
-//     const message = error instanceof Error ? error.message : String(error);
-//     if (Platform.OS === 'web') {
-//       alert(message);
-//     } else {
-//       Alert.alert('Erro', message);
-//     }
-//   }
-// }
-
 export async function login({ email, senha, router }) {
   try {
     await validarCamposLogin({ email, senha });
 
-    const BASE_URL = 'http://192.168.100.192:3000';
+    // const BASE_URL = 'http://192.168.100.192:3000';
+    const BASE_URL = 'http://localhost:3000';
     const response = await fetch(`${BASE_URL}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
