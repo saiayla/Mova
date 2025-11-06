@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from "@react-navigation/native";
 import { Alert, Platform, TouchableOpacity } from 'react-native';
 
@@ -16,8 +17,8 @@ export default function BotaoVoltar() {
     );
 }
 
-// const BASE_URL = 'http://192.168.100.192:3000';
-const BASE_URL = 'http://localhost:3000';
+const BASE_URL = 'http://192.168.100.192:3000';
+// const BASE_URL = 'http://localhost:3000';
 
 async function validarCampos(dados = {}) {
   if (typeof dados !== 'object' || dados === null) {
@@ -126,8 +127,8 @@ export async function login({ email, senha, router }) {
   try {
     await validarCamposLogin({ email, senha });
 
-    // const BASE_URL = 'http://192.168.100.192:3000';
-    const BASE_URL = 'http://localhost:3000';
+    const BASE_URL = 'http://192.168.100.192:3000';
+    // const BASE_URL = 'http://localhost:3000';
     const response = await fetch(`${BASE_URL}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -137,6 +138,10 @@ export async function login({ email, senha, router }) {
     const data = await response.json();
 
     if (response.ok) {
+
+      await AsyncStorage.setItem('token', data.token);
+      await AsyncStorage.setItem('tipo', data.tipo);
+      
       if (Platform.OS === 'web') {
         alert('Sucesso! Login realizado.');
       } else {
@@ -168,4 +173,42 @@ export async function login({ email, senha, router }) {
     }
   }
 }
+
+export async function cadastrarVeiculo({ tipo, placa, modelo, cor, passageiros_maximos, chassi }) {
+  try {
+    const token = await AsyncStorage.getItem('token');
+    if (!token) {
+      alert('Usuário não autenticado!');
+      return;
+    }
+
+    const response = await fetch(`${BASE_URL}/veiculo`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        tipo,
+        placa,
+        modelo,
+        cor,
+        passageiros_maximos,
+        chassi
+      })
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      alert('Veículo cadastrado com sucesso!');
+    } else {
+      alert(data.message || 'Erro ao cadastrar veículo');
+    }
+  } catch (error) {
+    console.error(error);
+    alert('Erro de rede ao cadastrar veículo');
+  }
+}
+
 
