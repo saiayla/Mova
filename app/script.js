@@ -3,6 +3,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from "@react-navigation/native";
 import { Alert, Platform, TouchableOpacity } from 'react-native';
 
+// const BASE_URL = 'http://192.168.100.192:3000';
+const BASE_URL = 'http://localhost:3000';
 
 export default function BotaoVoltar() {
     const navigation = useNavigation();
@@ -16,9 +18,6 @@ export default function BotaoVoltar() {
         </TouchableOpacity>
     );
 }
-
-const BASE_URL = 'http://192.168.100.192:3000';
-// const BASE_URL = 'http://localhost:3000';
 
 async function validarCampos(dados = {}) {
   if (typeof dados !== 'object' || dados === null) {
@@ -127,8 +126,6 @@ export async function login({ email, senha, router }) {
   try {
     await validarCamposLogin({ email, senha });
 
-    const BASE_URL = 'http://192.168.100.192:3000';
-    // const BASE_URL = 'http://localhost:3000';
     const response = await fetch(`${BASE_URL}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -149,7 +146,7 @@ export async function login({ email, senha, router }) {
       }
 
       if (data.tipo === 'motorista') {
-        router.push('/registroVeiculo');
+        router.push('/veiculos');
       } else if (data.tipo === 'passageiro') {
         router.push('/solicitarViagem');
       } else {
@@ -176,6 +173,21 @@ export async function login({ email, senha, router }) {
 
 export async function cadastrarVeiculo({ tipo, placa, modelo, cor, passageiros_maximos, chassi }) {
   try {
+
+    // validação da placa
+    const placaRegex = /^[A-Z]{3}[0-9][A-Z0-9][0-9]{2}$/i; if (!placaRegex.test(placa)) { alert('Placa inválida. Use o formato ABC1D23.'); return; }
+    // validação de capacidade
+    const capacidadeNum = Number(passageiros_maximos);
+    if (isNaN(capacidadeNum) || capacidadeNum <= 0) {
+      alert('Capacidade deve ser um número positivo.');
+      return;
+    } 
+    // validação do chassi
+    if (chassi.length < 17) {
+      alert('Chassi inválido. Deve ter pelo menos 17 caracteres.');
+      return;
+    }
+
     const token = await AsyncStorage.getItem('token');
     if (!token) {
       alert('Usuário não autenticado!');

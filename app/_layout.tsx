@@ -20,6 +20,7 @@ export default function RootLayout() {
         <Stack.Screen name="cadastroMotorista" options={{ headerShown: false }} />
         <Stack.Screen name="registroVeiculo" options={{ headerShown: false }} />
         <Stack.Screen name="solicitarViagem" options={{ headerShown: false }} />
+        <Stack.Screen name="veiculos" options={{ headerShown: false }} />
       </Stack>
       <StatusBar style="auto" />
     </ThemeProvider>
