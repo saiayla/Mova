@@ -48,9 +48,19 @@ export default function CriarViagem() {
           </Picker>
         </View>
 
-        <TouchableOpacity
-          style={[styles.Button, { marginTop: 50, alignItems: 'center' }]}
-        >
+        <TouchableOpacity style={[styles.Button, { marginTop: 50, alignItems: 'center' }]}  onPress={() => {
+    const dados = {
+      horario_partida: data.toISOString(), // ou outro formato
+      valor_por_km: 1.5, // tu pode pedir esse valor no input depois
+      local_saida: origem,
+      local_chegada: destino,
+      vagas_maximas: 4, // idem, tu pode criar input pra isso
+      id_motorista: 1, // pode vir do token, se tiver login
+      placa_veiculo: veiculo,
+    };
+    criarViagem(dados);
+  }}
+>>
           <Text style={styles.buttonText}>Criar Viagem</Text>
         </TouchableOpacity>
 
