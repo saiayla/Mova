@@ -146,7 +146,8 @@ export async function login({ email, senha, router }) {
       }
 
       if (data.tipo === 'motorista') {
-        router.push('/veiculos');
+        router.push('/perfilMotorista');
+        router.push('/perfilMotorista');
       } else if (data.tipo === 'passageiro') {
         router.push('/solicitarViagem');
       } else {
@@ -173,16 +174,12 @@ export async function login({ email, senha, router }) {
 
 export async function cadastrarVeiculo({ tipo, placa, modelo, cor, passageiros_maximos, chassi }) {
   try {
-
-    // validação da placa
     const placaRegex = /^[A-Z]{3}[0-9][A-Z0-9][0-9]{2}$/i; if (!placaRegex.test(placa)) { alert('Placa inválida. Use o formato ABC1D23.'); return; }
-    // validação de capacidade
     const capacidadeNum = Number(passageiros_maximos);
     if (isNaN(capacidadeNum) || capacidadeNum <= 0) {
       alert('Capacidade deve ser um número positivo.');
       return;
-    }
-    // validação do chassi
+    } 
     if (chassi.length < 17) {
       alert('Chassi inválido. Deve ter pelo menos 17 caracteres.');
       return;
@@ -217,9 +214,68 @@ export async function cadastrarVeiculo({ tipo, placa, modelo, cor, passageiros_m
     } else {
       alert(data.message || 'Erro ao cadastrar veículo');
     }
+    router.push('/veiculos');
   } catch (error) {
     console.error(error);
     alert('Erro de rede ao cadastrar veículo');
+  }
+}
+
+export async function buscarVeiculos() {
+  try {
+    const token = await AsyncStorage.getItem('token');
+    if (!token) throw new Error('Usuário não autenticado');
+
+    const response = await fetch(`${BASE_URL}/veiculo`, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) throw new Error('Erro ao buscar veículos');
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Erro ao buscar veículos:', error);
+    throw error;
+  }
+}
+
+function showAlert(titulo, mensagem) {
+  if (Platform.OS === 'web') {
+    alert(`${titulo}: ${mensagem}`);
+  } else {
+    Alert.alert(titulo, mensagem);
+  }
+}
+
+export async function criarViagem(dados) {
+  try {
+    const token = await AsyncStorage.getItem('token');
+    if (!token) {
+      showAlert('Erro', 'Usuário não autenticado.');
+      return;
+    }
+
+    const response = await fetch(`${BASE_URL}/viagens`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(dados),
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) throw new Error(result.error || 'Erro ao criar viagem');
+
+    showAlert('Sucesso', 'Viagem criada com sucesso!');
+  } catch (err) {
+    console.error('Erro ao criar viagem:', err);
+    showAlert('Erro', 'Falha ao criar viagem.');
   }
 }
 
@@ -279,3 +335,5 @@ export async function excluirVeiculo(id, setVeiculos) {
     else Alert.alert('Erro', err.message || 'Não foi possível excluir o veículo.');
   }
 }
+
+
