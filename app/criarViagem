@@ -1,0 +1,64 @@
+import { Ionicons } from '@expo/vector-icons'; // ícone de calendário
+import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
+import { Picker } from '@react-native-picker/picker';
+import { useRouter } from 'expo-router';
+import { useState } from 'react';
+import { Text, TextInput, TouchableOpacity, View } from 'react-native';
+import BotaoVoltar from './script';
+import { globalStyles as styles } from './style';
+
+export default function CriarViagem() {
+  const router = useRouter();
+
+  const [origem, setOrigem] = useState('');
+  const [destino, setDestino] = useState('');
+  const [data, setData] = useState<Date | null>(null);
+  const [mostrarData, setMostrarData] = useState(false);
+  const [mostrarPicker, setMostrarPicker] = useState(false);
+  const [veiculo, setVeiculo] = useState('');
+
+  const onChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
+    setMostrarPicker(false);
+    if (selectedDate) {
+      setData(selectedDate);
+      setMostrarData(true);
+    }
+  };
+
+  return (
+    <View style={styles.container}>
+      <Text style={styles.title3}>Nova Viagem</Text>
+
+      <View style={{ gap: 10, marginTop: 50 }}>
+        <TextInput value={origem} onChangeText={setOrigem} placeholder="Origem" placeholderTextColor="#c9c9c9ff" style={styles.input2}/>
+        <TextInput value={destino} onChangeText={setDestino} placeholder="Destino" placeholderTextColor="#c9c9c9ff" style={styles.input2}/>
+        <View>
+             <TouchableOpacity onPress={() => setMostrarPicker(true)}>
+                <View style={[styles.input2, { flexDirection: 'row', alignItems: 'center' }]}>
+                    <Ionicons name="calendar-outline" size={20} color="#777" style={{ marginRight: 8 }} />
+                    <Text style={{ color: data ? '#000' : '#c9c9c9ff' }}> {data ? data.toLocaleDateString() : 'Selecione uma data'}</Text>
+                </View>
+          </TouchableOpacity>
+          {mostrarPicker && (<DateTimePicker value={data || new Date()} mode="date" display="default" onChange={onChange}/>)}
+        </View>
+
+        <View>
+          <Picker selectedValue={veiculo} onValueChange={(value) => setVeiculo(value)} style={styles.input2}>
+            <Picker.Item label="Selecione o veículo" value="" />
+          </Picker>
+        </View>
+
+        <TouchableOpacity
+          style={[styles.Button, { marginTop: 50, alignItems: 'center' }]}
+        >
+          <Text style={styles.buttonText}>Criar Viagem</Text>
+        </TouchableOpacity>
+
+        <View style={{ flexDirection: "row", alignItems: "center" }}>
+          <BotaoVoltar />
+          <Text style={{ fontSize: 15 }}>Voltar</Text>
+        </View>
+      </View>
+    </View>
+  );
+}
