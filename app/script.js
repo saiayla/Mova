@@ -147,6 +147,7 @@ export async function login({ email, senha, router }) {
 
       if (data.tipo === 'motorista') {
         router.push('/perfilMotorista');
+        router.push('/perfilMotorista');
       } else if (data.tipo === 'passageiro') {
         router.push('/solicitarViagem');
       } else {
