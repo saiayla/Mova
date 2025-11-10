@@ -146,7 +146,7 @@ export async function login({ email, senha, router }) {
       }
 
       if (data.tipo === 'motorista') {
-        router.push('/veiculos');
+        router.push('/perfilMotorista');
       } else if (data.tipo === 'passageiro') {
         router.push('/solicitarViagem');
       } else {
@@ -217,9 +217,39 @@ export async function cadastrarVeiculo({ tipo, placa, modelo, cor, passageiros_m
     } else {
       alert(data.message || 'Erro ao cadastrar veículo');
     }
+      router.push('/veiculos');
   } catch (error) {
     console.error(error);
     alert('Erro de rede ao cadastrar veículo');
+  }
+}
+
+export async function criarViagem(dadosViagem) {
+  try {
+    const token = await AsyncStorage.getItem('token');
+    if (!token) {
+      Alert.alert('Erro', 'Usuário não autenticado.');
+      return;
+    }
+
+    const response = await fetch(`${BASE_URL}/viagens`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(dadosViagem),
+    });
+
+    if (!response.ok) {
+      const msg = await response.text();
+      throw new Error(msg || 'Erro ao criar viagem');
+    }
+
+    Alert.alert('Sucesso', 'Viagem criada com sucesso!');
+  } catch (err) {
+    console.error('Erro ao criar viagem:', err);
+    Alert.alert('Erro', 'Não foi possível criar a viagem.');
   }
 }
 
