@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, FlatList, Text, TouchableOpacity, View } from 'react-native';
+import { excluirVeiculo } from './script';
 import { globalStyles as styles } from './style';
 
 export default function VeiculosCadastrados() {
@@ -69,19 +70,14 @@ export default function VeiculosCadastrados() {
                     data={veiculos}
                     keyExtractor={(item) => item.id_veiculo?.toString() || item.placa}
                     renderItem={({ item }) => (
-                        <View style={{
-                            backgroundColor: '#f0f0f0',
-                            borderRadius: 10,
-                            padding: 15,
-                            marginVertical: 8,
-                            width: '100%',
-                        }}>
-                            <Text style={{ fontWeight: 'bold', fontSize: 16 }}>{item.modelo}</Text>
-                            <Text>Placa: {item.placa}</Text>
-                            <Text>Cor: {item.cor}</Text>
-                            <Text>Tipo: {item.usuario}</Text>
-                            <Text>Capacidade: {item.passageiros_maximos}</Text>
-                            <Text>Chassi: {item.chassi}</Text>
+                        <View style={styles.card}>
+                            <View style={{flexDirection: 'column'}}>
+                                <Text style={{ fontWeight: 'bold', fontSize: 16, marginBottom: 5 }}>{item.placa}</Text>
+                                <Text>{item.modelo} - {item.cor} - {item.passageiros_maximos}</Text>
+                            </View>
+                            <TouchableOpacity style={styles.deleteButton} onPress={() => excluirVeiculo(item.id_veiculo)}>
+                                <Text> Excluir </Text>
+                            </TouchableOpacity>
                         </View>
                     )}
                 />

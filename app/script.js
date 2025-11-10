@@ -7,16 +7,16 @@ import { Alert, Platform, TouchableOpacity } from 'react-native';
 const BASE_URL = 'http://localhost:3000';
 
 export default function BotaoVoltar() {
-    const navigation = useNavigation();
+  const navigation = useNavigation();
 
-    return (
-        <TouchableOpacity
-            onPress={() => navigation.goBack()}
-            style={{ padding: 5}}
-        >
-            <Ionicons name="arrow-back" size={15} color="black" />
-        </TouchableOpacity>
-    );
+  return (
+    <TouchableOpacity
+      onPress={() => navigation.goBack()}
+      style={{ padding: 5 }}
+    >
+      <Ionicons name="arrow-back" size={15} color="black" />
+    </TouchableOpacity>
+  );
 }
 
 async function validarCampos(dados = {}) {
@@ -138,7 +138,7 @@ export async function login({ email, senha, router }) {
 
       await AsyncStorage.setItem('token', data.token);
       await AsyncStorage.setItem('tipo', data.tipo);
-      
+
       if (Platform.OS === 'web') {
         alert('Sucesso! Login realizado.');
       } else {
@@ -181,7 +181,7 @@ export async function cadastrarVeiculo({ tipo, placa, modelo, cor, passageiros_m
     if (isNaN(capacidadeNum) || capacidadeNum <= 0) {
       alert('Capacidade deve ser um número positivo.');
       return;
-    } 
+    }
     // validação do chassi
     if (chassi.length < 17) {
       alert('Chassi inválido. Deve ter pelo menos 17 caracteres.');
@@ -223,4 +223,59 @@ export async function cadastrarVeiculo({ tipo, placa, modelo, cor, passageiros_m
   }
 }
 
+export async function excluirVeiculo(id, setVeiculos) {
+  try {
+    const token = await AsyncStorage.getItem('token');
+    if (!token) {
+      console.error('Sem token no AsyncStorage');
+      if (Platform.OS === 'web') alert('Usuário não autenticado');
+      else Alert.alert('Erro', 'Usuário não autenticado');
+      return;
+    }
 
+    console.log('[DELETE] URL:', `${BASE_URL}/veiculo/${id}`);
+    console.log('[DELETE] Token:', token);
+
+    const response = await fetch(`${BASE_URL}/veiculo/${id}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    console.log('[DELETE] status:', response.status, 'ok:', response.ok);
+
+    // tenta ler body (pode ser texto ou json)
+    let text;
+    try {
+      text = await response.text();
+      console.log('[DELETE] body text:', text);
+    } catch (e) {
+      console.log('[DELETE] não conseguiu ler body:', e);
+    }
+
+    // se backend retornar JSON com mensagem de erro, tenta parsear
+    try {
+      const maybeJson = JSON.parse(text || '{}');
+      console.log('[DELETE] body json:', maybeJson);
+    } catch (_) { /* ignora */ }
+
+    // tratar códigos esperados:
+    if (response.ok) {
+      // se 200/204 etc
+      setVeiculos(prev => prev.filter(v => v.id_veiculo !== id));
+      if (Platform.OS === 'web') alert('Veículo excluído com sucesso!');
+      else Alert.alert('Sucesso', 'Veículo excluído com sucesso!');
+      return;
+    }
+
+    // se não ok, joga um erro com info
+    throw new Error(`DELETE falhou: status ${response.status} - ${text}`);
+
+  } catch (err) {
+    console.error('Erro ao excluir veículo:', err);
+    if (Platform.OS === 'web') alert(`Erro ao excluir veículo: ${err.message}`);
+    else Alert.alert('Erro', err.message || 'Não foi possível excluir o veículo.');
+  }
+}

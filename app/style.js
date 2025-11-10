@@ -33,7 +33,7 @@ export const globalStyles = StyleSheet.create({
     padding: 10,
     backgroundColor: '#F8FAFF',
   },
-  Button:{
+  Button: {
     paddingHorizontal: 20,
     paddingVertical: 10,
     backgroundColor: '#1F7AF3',
@@ -77,7 +77,25 @@ export const globalStyles = StyleSheet.create({
     fontWeight: 'bold',
     marginTop: 10
   },
-  map: { 
-    flex: 1 
+  map: {
+    flex: 1
+  },
+  card: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 20,
+    backgroundColor:'#F8FAFF',
+    padding: 20,
+    borderRadius: 10,
+    marginBottom: 5
+  },
+  deleteButton : {
+    borderRadius: 10,
+    backgroundColor: '#fc2600ff',
+    padding: 5,
   },
 });
