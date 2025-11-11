@@ -1,49 +1,49 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet } from "react-native";
 
 export const globalStyles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: 'center',
-    flexDirection: 'column',
-    justifyContent: 'center',
+    alignItems: "center",
+    flexDirection: "column",
+    justifyContent: "center",
     padding: 20,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
   },
   form: {
     paddingVertical: 40,
-    width: '100%',
-    backgroundColor: '#F6F6F6',
+    width: "100%",
+    backgroundColor: "#F6F6F6",
     borderRadius: 30,
     borderWidth: 1,
-    borderColor: '#000',
-    alignItems: 'center',
+    borderColor: "#000",
+    alignItems: "center",
   },
   input: {
     height: 40,
     borderWidth: 1,
-    borderColor: '#000',
+    borderColor: "#000",
     borderRadius: 5,
     padding: 10,
   },
   input2: {
     width: 250,
     borderWidth: 1,
-    borderColor: '#E6EEF8',
+    borderColor: "#E6EEF8",
     borderRadius: 15,
     padding: 10,
-    backgroundColor: '#F8FAFF',
-    color: '#000000',
+    backgroundColor: "#F8FAFF",
+    color: "#000000",
   },
   Button: {
     paddingHorizontal: 20,
     paddingVertical: 10,
-    backgroundColor: '#1F7AF3',
+    backgroundColor: "#1F7AF3",
     borderRadius: 5,
     marginBottom: 20,
   },
   buttonText: {
-    color: '#fff',
-    fontWeight: 'bold',
+    color: "#fff",
+    fontWeight: "bold",
     fontSize: 16,
   },
   logo: {
@@ -53,50 +53,50 @@ export const globalStyles = StyleSheet.create({
   },
   title: {
     fontSize: 30,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    marginBottom: 5
+    fontWeight: "bold",
+    color: "#FFFFFF",
+    marginBottom: 5,
   },
   subtitle: {
     fontSize: 18,
-    color: '#FFFFFF',
-    marginBottom: 40
+    color: "#FFFFFF",
+    marginBottom: 40,
   },
   title2: {
     fontSize: 30,
-    fontWeight: 'bold',
-    color: '#1F7AF3',
-    marginBottom: 5
+    fontWeight: "bold",
+    color: "#1F7AF3",
+    marginBottom: 5,
   },
   title3: {
     fontSize: 30,
-    fontWeight: 'bold',
-    color: '#000000',
-    marginBottom: 5
+    fontWeight: "bold",
+    color: "#000000",
+    marginBottom: 5,
   },
   label: {
-    fontWeight: 'bold',
-    marginTop: 10
+    fontWeight: "bold",
+    marginTop: 10,
   },
   map: {
-    flex: 1
+    flex: 1,
   },
   card: {
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginTop: 20,
-    backgroundColor:'#F8FAFF',
+    backgroundColor: "#F8FAFF",
     padding: 20,
     borderRadius: 10,
-    marginBottom: 5
+    marginBottom: 5,
   },
-  deleteButton : {
+  deleteButton: {
     borderRadius: 10,
-    backgroundColor: '#fc2600ff',
+    backgroundColor: "#fc2600ff",
     padding: 5,
   },
 });

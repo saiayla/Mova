@@ -1,10 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
-import { useRouter } from "expo-router"; // Importado para o botão 'voltar'
-import React, { useEffect, useState } from "react";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import React from "react";
 import {
-  ActivityIndicator,
   Alert,
   FlatList,
   Platform,
@@ -14,64 +12,37 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { BASE_URL } from "./script";
 
-// Removida a importação de 'globalStyles' e 'BASE_URL' de script
-
-// ATENÇÃO: 'localhost' não funciona em emuladores/dispositivos.
-// Use 10.0.2.2 para o emulador Android ou o IP da sua máquina.
-// const BASE_URL = "http://10.0.2.2:3000";
-
+// Definição do tipo Viagem (baseado no seu log)
 type Viagem = {
   id_viagem: number;
   local_saida: string;
   local_chegada: string;
   horario_partida: string;
   valor_por_km: number;
+  km: number;
+  valor_total: number;
   vagas_maximas: number;
   placa_veiculo: string;
-  modelo: string; // Adicionado com base no seu renderItem
+  modelo: string;
 };
 
-export default function MinhasViagensScreen() {
-  const [viagens, setViagens] = useState<Viagem[]>([]);
-  const [loading, setLoading] = useState(true);
+export default function ViagensResultScreen() {
   const router = useRouter();
 
-  useEffect(() => {
-    async function carregarViagens() {
-      try {
-        const token = await AsyncStorage.getItem("token");
-        if (!token) {
-          Alert.alert("Erro", "Usuário não autenticado.");
-          router.replace("/login"); // Manda para o login
-          return;
-        }
+  // 1. Recebe os parâmetros da rota (a lista de viagens filtrada)
+  const params = useLocalSearchParams();
+  let viagens: Viagem[] = [];
 
-        const response = await fetch(`${BASE_URL}/viagens`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        const data = await response.json();
-        if (!response.ok)
-          throw new Error(data.message || "Erro ao buscar viagens"); // Use 'message' se vier da API
-
-        setViagens(data);
-      } catch (error) {
-        console.error("Erro ao carregar viagens:", error);
-        Alert.alert(
-          "Erro",
-          (error as Error).message || "Falha ao buscar viagens"
-        );
-      } finally {
-        setLoading(false);
-      }
+  try {
+    // 2. Converte a string JSON de volta para um array de objetos
+    if (typeof params.viagens === "string") {
+      viagens = JSON.parse(params.viagens);
     }
-
-    carregarViagens();
-  }, []); // O array vazio [] garante que rode uma vez
+  } catch (e) {
+    console.error("Erro ao parsear viagens:", e);
+    Alert.alert("Erro", "Não foi possível carregar os resultados.");
+  }
 
   // Função para formatar a data
   const formatarData = (dataISO: string) => {
@@ -85,26 +56,18 @@ export default function MinhasViagensScreen() {
     });
   };
 
-  // Tela de Loading no padrão do App
-  if (loading) {
-    return (
-      <LinearGradient
-        colors={["#1974F3", "#85E0FA"]}
-        style={{ flex: 1 }} // style={styles.gradientBackground}
-      >
-        <SafeAreaView
-          style={{
-            flex: 1,
-            justifyContent: "center",
-            alignItems: "center",
-            paddingTop: Platform.OS === "android" ? 25 : 0,
-          }} // style={styles.safeArea + loading}
-        >
-          <ActivityIndicator size="large" color="#FFFFFF" />
-        </SafeAreaView>
-      </LinearGradient>
+  // Função de placeholder para quando o passageiro reservar
+  const handleReservar = (viagem: Viagem) => {
+    Alert.alert(
+      "Reservar Viagem",
+      `Você selecionou a viagem para ${
+        viagem.local_chegada
+      } por R$ ${viagem.valor_total.toFixed(
+        2
+      )}.\n\n(Implementar lógica de reserva aqui)`
     );
-  }
+    // TODO: Adicionar lógica de check-in (POST /checkin)
+  };
 
   // Tela Principal
   return (
@@ -122,7 +85,7 @@ export default function MinhasViagensScreen() {
 
         {/* Botão de Voltar Padronizado */}
         <TouchableOpacity
-          onPress={() => router.replace("/motoristaConfig")}
+          onPress={() => router.back()}
           style={{
             position: "absolute",
             top: Platform.OS === "android" ? 35 : 10,
@@ -168,7 +131,7 @@ export default function MinhasViagensScreen() {
                 marginBottom: 25,
               }} // style={styles.dashboardTitle}
             >
-              Minhas Viagens
+              Viagens Encontradas
             </Text>
 
             {viagens.length === 0 ? (
@@ -182,7 +145,7 @@ export default function MinhasViagensScreen() {
                   marginBottom: 20,
                 }} // style={styles.dashboardSubtitle}
               >
-                Nenhuma viagem encontrada.
+                Nenhuma viagem encontrada para esta rota.
               </Text>
             ) : (
               // Lista de Viagens
@@ -191,8 +154,8 @@ export default function MinhasViagensScreen() {
                 keyExtractor={(item) => item.id_viagem.toString()}
                 style={{ width: "100%" }} // Garante que a FlatList use a largura total do card
                 renderItem={({ item }) => (
-                  // Card de Item de Viagem (Estilo do dashboardButton)
-                  <View
+                  // Card de Item de Viagem (Clicável)
+                  <TouchableOpacity
                     style={{
                       width: "100%",
                       flexDirection: "row", // Para alinhar ícone e texto
@@ -203,10 +166,11 @@ export default function MinhasViagensScreen() {
                       borderRadius: 10,
                       marginBottom: 10,
                     }} // style={styles.dashboardButton}
+                    onPress={() => handleReservar(item)} // Ação de clique
                   >
                     <Ionicons
-                      name="map-outline"
-                      size={24}
+                      name="bus-outline" // Ícone de Van/Ônibus
+                      size={32}
                       style={{ marginRight: 15, color: "#1F7AF3" }} // style={styles.dashboardButtonIcon}
                     />
                     <View style={{ flex: 1 }}>
@@ -221,53 +185,31 @@ export default function MinhasViagensScreen() {
                         {item.modelo} ({item.placa_veiculo})
                       </Text>
                       <Text style={{ fontSize: 13, color: "#555" }}>
-                        De: {item.local_saida}
-                      </Text>
-                      <Text style={{ fontSize: 13, color: "#555" }}>
-                        Para: {item.local_chegada}
+                        De: {item.local_saida} Para: {item.local_chegada}
                       </Text>
                       <Text style={{ fontSize: 13, color: "#555" }}>
                         Partida: {formatarData(item.horario_partida)}
                       </Text>
                       <Text style={{ fontSize: 13, color: "#555" }}>
-                        Vagas: {item.vagas_maximas} | Valor/km: R${" "}
-                        {item.valor_por_km.toFixed(2)}
+                        Vagas: {item.vagas_maximas}
                       </Text>
                     </View>
-                  </View>
+
+                    {/* Preço Total (Baseado na imagem) */}
+                    <Text
+                      style={{
+                        fontSize: 16,
+                        fontWeight: "bold",
+                        color: "#333",
+                        marginLeft: 10,
+                      }}
+                    >
+                      R$ {item.valor_total.toFixed(2)}
+                    </Text>
+                  </TouchableOpacity>
                 )}
               />
             )}
-
-            {/* --- BOTÃO ADICIONADO --- */}
-            <TouchableOpacity
-              style={{
-                width: "100%",
-                height: 50,
-                backgroundColor: "#1F7AF3",
-                borderRadius: 10,
-                justifyContent: "center",
-                alignItems: "center",
-                marginTop: 20, // Espaçamento acima do botão
-                shadowColor: "#1F7AF3",
-                shadowOffset: { width: 0, height: 3 },
-                shadowOpacity: 0.3,
-                shadowRadius: 5,
-                elevation: 6,
-              }}
-              onPress={() => router.push("/criarViagem")} // Navega para a tela de criação
-            >
-              <Text
-                style={{
-                  color: "#FFFFFF",
-                  fontWeight: "bold",
-                  fontSize: 16,
-                }}
-              >
-                Cadastrar Nova Viagem
-              </Text>
-            </TouchableOpacity>
-            {/* --- FIM DO BOTÃO ADICIONADO --- */}
           </View>
         </View>
       </SafeAreaView>
