@@ -145,12 +145,12 @@ export default function HomePassageiro() {
         </View>
 
         {/* Botão de Buscar */}
-        <TouchableOpacity
+        {/* <TouchableOpacity
           style={styles.searchButton}
           onPress={() => Alert.alert("Busca", "Buscando Vans...")}
         >
           <Text style={styles.searchButtonText}>Buscar</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </View>
 
       {/* --- MUDANÇA --- */}
