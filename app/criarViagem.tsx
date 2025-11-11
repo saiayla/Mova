@@ -17,7 +17,8 @@ export default function CriarViagem() {
   const [veiculo, setVeiculo] = useState("");
   const [veiculos, setVeiculos] = useState<Veiculo[]>([]);
 
-  const BASE_URL = "http://localhost:3000";
+  // const BASE_URL = "http://172.20.10.4:3000";
+  const BASE_URL = "http://192.168.100.192:3000";
 
   // Buscar veículos do usuário
   useEffect(() => {
@@ -63,15 +64,12 @@ export default function CriarViagem() {
         return;
       }
 
-      // payload batendo com backend
+      // payload agora só envia local_saida, local_chegada, placa_veiculo
       const body = {
-        horario_partida: data,
         local_saida: origem,
         local_chegada: destino,
-        vagas_maximas: 4,
-        id_motorista: 1,       // ou pegar do usuário logado
         placa_veiculo: veiculo,
-        valor_por_km: 1.5,     // valor padrão ou de um input
+        // data não é usada no backend, mas você pode mandar se quiser
       };
 
       const response = await fetch(`${BASE_URL}/viagens`, {
@@ -148,7 +146,7 @@ export default function CriarViagem() {
           <Picker.Item
             key={v.id_veiculo}
             label={`${v.modelo} - ${v.placa}`}
-            value={v.placa} // enviar a placa pro backend
+            value={v.placa} // agora bate com placa_veiculo no backend
           />
         ))}
       </Picker>

@@ -3,8 +3,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from "@react-navigation/native";
 import { Alert, Platform, TouchableOpacity } from 'react-native';
 
-// const BASE_URL = 'http://192.168.100.192:3000';
-const BASE_URL = 'http://localhost:3000';
+const BASE_URL = 'http://192.168.100.192:3000';
+// const BASE_URL = 'http://172.20.10.4:3000';
 
 export default function BotaoVoltar() {
   const navigation = useNavigation();
@@ -147,7 +147,6 @@ export async function login({ email, senha, router }) {
 
       if (data.tipo === 'motorista') {
         router.push('/perfilMotorista');
-        router.push('/perfilMotorista');
       } else if (data.tipo === 'passageiro') {
         router.push('/solicitarViagem');
       } else {
@@ -211,6 +210,7 @@ export async function cadastrarVeiculo({ tipo, placa, modelo, cor, passageiros_m
 
     if (response.ok) {
       alert('Veículo cadastrado com sucesso!');
+      router.push('/veiculos');
     } else {
       alert(data.message || 'Erro ao cadastrar veículo');
     }
@@ -221,63 +221,6 @@ export async function cadastrarVeiculo({ tipo, placa, modelo, cor, passageiros_m
   }
 }
 
-export async function buscarVeiculos() {
-  try {
-    const token = await AsyncStorage.getItem('token');
-    if (!token) throw new Error('Usuário não autenticado');
-
-    const response = await fetch(`${BASE_URL}/veiculo`, {
-      method: 'GET',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!response.ok) throw new Error('Erro ao buscar veículos');
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error('Erro ao buscar veículos:', error);
-    throw error;
-  }
-}
-
-function showAlert(titulo, mensagem) {
-  if (Platform.OS === 'web') {
-    alert(`${titulo}: ${mensagem}`);
-  } else {
-    Alert.alert(titulo, mensagem);
-  }
-}
-
-export async function criarViagem(dados) {
-  try {
-    const token = await AsyncStorage.getItem('token');
-    if (!token) {
-      showAlert('Erro', 'Usuário não autenticado.');
-      return;
-    }
-
-    const response = await fetch(`${BASE_URL}/viagens`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(dados),
-    });
-
-    const result = await response.json();
-
-    if (!response.ok) throw new Error(result.error || 'Erro ao criar viagem');
-
-    showAlert('Sucesso', 'Viagem criada com sucesso!');
-  } catch (err) {
-    console.error('Erro ao criar viagem:', err);
-    showAlert('Erro', 'Falha ao criar viagem.');
-  }
-}
 
 export async function excluirVeiculo(id, setVeiculos) {
   try {
