@@ -23,6 +23,7 @@ export default function RootLayout() {
         <Stack.Screen name="criarViagem" options={{ headerShown: false }} />
         <Stack.Screen name="veiculos" options={{ headerShown: false }} />
         <Stack.Screen name="perfilMotorista" options={{ headerShown: false }} />
+        <Stack.Screen name="viagens" options={{ headerShown: false }} />
       </Stack>
       <StatusBar style="auto" />
     </ThemeProvider>

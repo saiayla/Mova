@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { Alert, Platform, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { globalStyles as styles } from "./style";
 
+
 type Veiculo = {
   id_veiculo: number;
   placa: string;
