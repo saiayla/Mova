@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import AsyncStorage from "@react-native-async-storage/async-storage"; // 3. Importado
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Location from "expo-location";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
@@ -19,12 +19,10 @@ import {
 } from "react-native";
 import MapView, { Marker, Region } from "react-native-maps";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { BASE_URL } from "./script"; // 4. Caminho corrigido
+import { BASE_URL } from "./script";
 
-// Pega a altura da tela para o mapa
 const { height } = Dimensions.get("window");
 
-// 5. Definido o tipo Viagem (necessário para a busca)
 type Viagem = {
   id_viagem: number;
   local_saida: string;
@@ -41,19 +39,17 @@ export default function HomePassageiro() {
   const router = useRouter();
 
   const [region, setRegion] = useState<Region | undefined>(undefined);
-  const [partida, setPartida] = useState("Universidade Vila Velha");
-  const [destino, setDestino] = useState("R. Cristóvão Colombo, 479");
 
-  // 6. Estados de 'loading' e 'vans' adicionados
+  // REMOVIDO: const [partida, setPartida] ... (Não é mais necessário para a busca)
+  const [destino, setDestino] = useState(""); // Inicia vazio para o usuário digitar
+
   const [loading, setLoading] = useState(false);
-  const [vans, setVans] = useState<Viagem[]>([]); // Para exibir marcadores no mapa
+  const [vans, setVans] = useState<Viagem[]>([]);
 
-  // 7. Removido o useEffect do Keyboard.addListener (não é mais necessário)
-
-  // 8. Função de busca CORRIGIDA (baseada na nossa conversa anterior)
   const handleBuscarViagens = async () => {
-    if (!partida || !destino) {
-      Alert.alert("Erro", "Por favor, preencha a partida e o destino.");
+    // 1. Validação: Verifica apenas o destino
+    if (!destino) {
+      Alert.alert("Atenção", "Por favor, informe para onde você quer ir.");
       return;
     }
     setLoading(true);
@@ -67,8 +63,7 @@ export default function HomePassageiro() {
         return;
       }
 
-      // 9. Rota corrigida para 'viagens' (plural)
-      const response = await fetch(`${BASE_URL}/viagens`, {
+      const response = await fetch(`${BASE_URL}/viagens/todas`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -83,32 +78,28 @@ export default function HomePassageiro() {
 
       const todasViagens: Viagem[] = await response.json();
 
-      // 10. Lógica de filtro (exemplo simples)
-      const partidaLower = partida.toLowerCase();
+      // 2. Filtro: Compara apenas o Destino (local_chegada)
       const destinoLower = destino.toLowerCase();
 
       const viagensFiltradas = todasViagens.filter((viagem) => {
-        const localSaidaLower = viagem.local_saida.toLowerCase();
         const localChegadaLower = viagem.local_chegada.toLowerCase();
-        // Lógica de filtro simples (pode ser melhorada)
-        return (
-          localSaidaLower.includes(partidaLower) &&
-          localChegadaLower.includes(destinoLower)
-        );
+
+        // Verifica se o destino digitado está contido no local de chegada da viagem
+        return localChegadaLower.includes(destinoLower);
       });
+
+      console.log("viagensFiltradas", viagensFiltradas);
 
       if (viagensFiltradas.length === 0) {
         Alert.alert(
           "Nenhuma Viagem",
-          "Nenhuma viagem encontrada para essa rota."
+          `Nenhuma viagem encontrada com destino para "${destino}".`
         );
       } else {
-        // 11. Navega para a tela de resultados com os dados
-        router.push({
+        router.replace({
           pathname: "/viagensResult",
           params: { viagens: JSON.stringify(viagensFiltradas) },
         });
-        console.log("viagensFiltradas", viagensFiltradas);
       }
     } catch (err) {
       console.error(err);
@@ -121,15 +112,11 @@ export default function HomePassageiro() {
     }
   };
 
-  // Efeito para buscar a localização do usuário
+  // Efeito para buscar a localização do usuário (Mantido para o Mapa)
   useEffect(() => {
     (async () => {
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
-        Alert.alert(
-          "Permissão negada",
-          "Para usar esta funcionalidade, precisamos da sua localização."
-        );
         setRegion({
           latitude: -20.355,
           longitude: -40.29,
@@ -151,17 +138,14 @@ export default function HomePassageiro() {
         });
       } catch (error) {
         console.error("Erro ao buscar localização: ", error);
-        Alert.alert("Erro", "Não foi possível obter sua localização.");
       }
     })();
   }, []);
 
   return (
-    // 12. KeyboardAvoidingView CORRIGIDO (como estava na versão anterior)
     <KeyboardAvoidingView
       style={{ flex: 1 }}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
-      //   keyboardVerticalOffset={Platform.OS === "ios" ? 0 : -StatusBar.currentHeight}
     >
       <View style={styles.container}>
         <StatusBar barStyle="dark-content" />
@@ -182,84 +166,48 @@ export default function HomePassageiro() {
               title="Sua Localização"
             />
           )}
-          {/* TODO: Mapear as 'vans' (viagensFiltradas) aqui como Markers */}
         </MapView>
 
         {/* --- CARD INFERIOR --- */}
-        {/* 13. Removido { marginBottom: keyboardHeight } */}
         <View style={styles.bottomSheet}>
-          {/* 14. Adicionado ScrollView para o teclado funcionar */}
           <ScrollView
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
           >
-            <Text style={styles.title}>Procure sua Van</Text>
-            {/* Container dos Inputs de Localização */}
+            <Text style={styles.title}>Para onde vamos?</Text>
+
             <View style={styles.locationInputContainer}>
-              {/* Linha de "Partida" */}
+              {/* REMOVIDO O INPUT DE PARTIDA E A LINHA PONTILHADA */}
+
+              {/* Input Único de Destino */}
               <View style={styles.inputRow}>
                 <Ionicons
-                  name="radio-button-off"
-                  size={20}
-                  color="#555"
-                  style={styles.icon}
-                />
-                <TextInput
-                  style={styles.input}
-                  value={partida}
-                  onChangeText={setPartida}
-                  placeholder="Local de partida"
-                  placeholderTextColor="#888"
-                />
-              </View>
-
-              {/* Linha pontilhada de conexão */}
-              <View style={styles.connectorLine} />
-
-              {/* Linha de "Destino" */}
-              <View style={styles.inputRow}>
-                <Ionicons
-                  name="location-sharp"
-                  size={20}
-                  color="#555"
+                  name="search" // Mudei o ícone para lupa para indicar busca
+                  size={22}
+                  color="#1974F3" // Azul destaque
                   style={styles.icon}
                 />
                 <TextInput
                   style={styles.input}
                   value={destino}
                   onChangeText={setDestino}
-                  placeholder="Local de destino"
+                  placeholder="Digite o destino final (ex: Ufes)"
                   placeholderTextColor="#888"
+                  autoCapitalize="words"
                 />
               </View>
             </View>
-            Botão de Horário (Exemplo)
-            {/* <TouchableOpacity style={styles.timeButton}>
-              <Ionicons
-                name="time-outline"
-                size={20}
-                color="#333"
-                style={{ marginRight: 8 }}
-              />
-              <Text style={styles.timeButtonText}>Leave Now</Text>
-              <Ionicons
-                name="chevron-down"
-                size={16}
-                color="#333"
-                style={{ marginLeft: 5 }}
-              />
-            </TouchableOpacity> */}
+
             {/* Botão de Buscar */}
             <TouchableOpacity
               style={styles.searchButton}
-              // 15. onPress corrigido e loading adicionado
               onPress={handleBuscarViagens}
               disabled={loading}
             >
               {loading ? (
                 <ActivityIndicator color="#FFFFFF" />
               ) : (
-                <Text style={styles.searchButtonText}>Buscar</Text>
+                <Text style={styles.searchButtonText}>Buscar Viagens</Text>
               )}
             </TouchableOpacity>
           </ScrollView>
@@ -268,7 +216,7 @@ export default function HomePassageiro() {
         {/* Botão de Perfil Flutuante */}
         <TouchableOpacity
           style={[styles.profileButton, { top: insets.top + 10 }]}
-          onPress={() => router.push("/passageiroConfig")} // Mude para a rota correta do perfil
+          onPress={() => router.push("/passageiroConfig")}
         >
           <Ionicons name="person-circle-outline" size={32} color="#333" />
         </TouchableOpacity>
@@ -277,7 +225,6 @@ export default function HomePassageiro() {
   );
 }
 
-// OS ESTILOS PERMANECEM OS MESMOS
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -288,7 +235,6 @@ const styles = StyleSheet.create({
     height: height * 0.65,
   },
   bottomSheet: {
-    // flex: 1,
     backgroundColor: "white",
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
@@ -300,69 +246,52 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 5,
     elevation: 10,
+    flex: 1, // Garante que o fundo branco vá até o fim da tela
   },
   title: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: "bold",
     color: "#333",
     marginBottom: 20,
   },
   locationInputContainer: {
-    position: "relative",
     marginBottom: 15,
   },
   inputRow: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#f4f4f4",
-    borderRadius: 10,
+    borderRadius: 12,
     paddingHorizontal: 15,
-    paddingVertical: 12,
+    paddingVertical: 15, // Aumentei um pouco para ficar mais confortável
     marginBottom: 10,
+    borderWidth: 1,
+    borderColor: "#eee",
   },
   icon: {
-    marginRight: 10,
+    marginRight: 12,
   },
   input: {
     flex: 1,
     fontSize: 16,
     color: "#333",
   },
-  connectorLine: {
-    position: "absolute",
-    left: 24,
-    top: 45,
-    height: 30,
-    width: 1,
-    borderLeftWidth: 1,
-    borderLeftColor: "#999",
-    borderStyle: "dashed",
-  },
-  timeButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#f4f4f4",
-    borderRadius: 20,
-    paddingHorizontal: 15,
-    paddingVertical: 10,
-    alignSelf: "flex-start",
-    marginBottom: 20,
-  },
-  timeButtonText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#333",
-  },
   searchButton: {
-    backgroundColor: "#007AFF",
-    padding: 15,
-    borderRadius: 10,
+    backgroundColor: "#1974F3", // Azul mais vibrante
+    padding: 16,
+    borderRadius: 12,
     alignItems: "center",
     marginBottom: 20,
+    // marginTop: 10,
+    // shadowColor: "#1974F3",
+    // shadowOffset: { width: 0, height: 4 },
+    // shadowOpacity: 0.3,
+    // shadowRadius: 5,
+    // elevation: 5,
   },
   searchButtonText: {
     color: "white",
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: "bold",
   },
   profileButton: {

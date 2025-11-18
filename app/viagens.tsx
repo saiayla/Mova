@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
-import { useRouter } from "expo-router"; // Importado para o botão 'voltar'
+import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -16,12 +16,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { BASE_URL } from "./script";
 
-// Removida a importação de 'globalStyles' e 'BASE_URL' de script
-
-// ATENÇÃO: 'localhost' não funciona em emuladores/dispositivos.
-// Use 10.0.2.2 para o emulador Android ou o IP da sua máquina.
-// const BASE_URL = "http://10.0.2.2:3000";
-
+// ... (Restante do seu código e tipos Viagem) ...
 type Viagem = {
   id_viagem: number;
   local_saida: string;
@@ -30,7 +25,7 @@ type Viagem = {
   valor_por_km: number;
   vagas_maximas: number;
   placa_veiculo: string;
-  modelo: string; // Adicionado com base no seu renderItem
+  modelo: string;
 };
 
 export default function MinhasViagensScreen() {
@@ -38,16 +33,19 @@ export default function MinhasViagensScreen() {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
+  // ... (função carregarViagens e formatarData existentes) ...
+
   useEffect(() => {
     async function carregarViagens() {
       try {
         const token = await AsyncStorage.getItem("token");
         if (!token) {
           Alert.alert("Erro", "Usuário não autenticado.");
-          router.replace("/login"); // Manda para o login
+          router.replace("/login");
           return;
         }
 
+        // Requisição GET /viagens (lista todas as viagens, o filtro de motorista deve estar no backend)
         const response = await fetch(`${BASE_URL}/viagens`, {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -56,7 +54,7 @@ export default function MinhasViagensScreen() {
 
         const data = await response.json();
         if (!response.ok)
-          throw new Error(data.message || "Erro ao buscar viagens"); // Use 'message' se vier da API
+          throw new Error(data.message || "Erro ao buscar viagens");
 
         setViagens(data);
       } catch (error) {
@@ -71,9 +69,8 @@ export default function MinhasViagensScreen() {
     }
 
     carregarViagens();
-  }, []); // O array vazio [] garante que rode uma vez
+  }, []);
 
-  // Função para formatar a data
   const formatarData = (dataISO: string) => {
     const data = new Date(dataISO);
     return data.toLocaleString("pt-BR", {
@@ -85,20 +82,26 @@ export default function MinhasViagensScreen() {
     });
   };
 
-  // Tela de Loading no padrão do App
+  // NOVO: Função para navegar para a tela de detalhes
+  const handleVisualizarDetalhes = (id_viagem: number) => {
+    // Navega para a nova tela de detalhes, passando o ID da viagem
+    router.replace({
+      pathname: "/viagemDetalhesMotorista", // Ajuste este caminho de rota se necessário
+      params: { id_viagem: id_viagem.toString() },
+    });
+  };
+
+  // ... (Tela de Loading) ...
   if (loading) {
     return (
-      <LinearGradient
-        colors={["#1974F3", "#85E0FA"]}
-        style={{ flex: 1 }} // style={styles.gradientBackground}
-      >
+      <LinearGradient colors={["#1974F3", "#85E0FA"]} style={{ flex: 1 }}>
         <SafeAreaView
           style={{
             flex: 1,
             justifyContent: "center",
             alignItems: "center",
             paddingTop: Platform.OS === "android" ? 25 : 0,
-          }} // style={styles.safeArea + loading}
+          }}
         >
           <ActivityIndicator size="large" color="#FFFFFF" />
         </SafeAreaView>
@@ -108,15 +111,12 @@ export default function MinhasViagensScreen() {
 
   // Tela Principal
   return (
-    <LinearGradient
-      colors={["#1974F3", "#85E0FA"]}
-      style={{ flex: 1 }} // style={styles.gradientBackground}
-    >
+    <LinearGradient colors={["#1974F3", "#85E0FA"]} style={{ flex: 1 }}>
       <SafeAreaView
         style={{
           flex: 1,
           paddingTop: Platform.OS === "android" ? 25 : 0,
-        }} // style={styles.safeArea}
+        }}
       >
         <StatusBar barStyle="light-content" />
 
@@ -128,7 +128,7 @@ export default function MinhasViagensScreen() {
             top: Platform.OS === "android" ? 35 : 10,
             left: 20,
             zIndex: 1,
-          }} // style={styles.backButton}
+          }}
         >
           <Ionicons name="arrow-back-circle" size={40} color="white" />
         </TouchableOpacity>
@@ -137,11 +137,11 @@ export default function MinhasViagensScreen() {
         <View
           style={{
             flexGrow: 1,
-            justifyContent: "center", // Centraliza o card
+            justifyContent: "center",
             alignItems: "center",
-            paddingVertical: 60, // Espaço em cima e embaixo
-            paddingHorizontal: "5%", // Garante 5% de margem nas laterais
-          }} // style={styles.scrollContainer}
+            paddingVertical: 60,
+            paddingHorizontal: "5%",
+          }}
         >
           {/* Card Branco Flutuante */}
           <View
@@ -156,8 +156,8 @@ export default function MinhasViagensScreen() {
               shadowOpacity: 0.15,
               shadowRadius: 10,
               elevation: 10,
-              maxHeight: "95%", // Garante que o card não estoure a tela
-            }} // style={styles.formContainer}
+              maxHeight: "95%",
+            }}
           >
             {/* Título */}
             <Text
@@ -166,7 +166,7 @@ export default function MinhasViagensScreen() {
                 fontWeight: "bold",
                 color: "#333",
                 marginBottom: 25,
-              }} // style={styles.dashboardTitle}
+              }}
             >
               Minhas Viagens
             </Text>
@@ -180,7 +180,7 @@ export default function MinhasViagensScreen() {
                   textAlign: "center",
                   marginTop: 20,
                   marginBottom: 20,
-                }} // style={styles.dashboardSubtitle}
+                }}
               >
                 Nenhuma viagem encontrada.
               </Text>
@@ -189,25 +189,26 @@ export default function MinhasViagensScreen() {
               <FlatList
                 data={viagens}
                 keyExtractor={(item) => item.id_viagem.toString()}
-                style={{ width: "100%" }} // Garante que a FlatList use a largura total do card
+                style={{ width: "100%" }}
                 renderItem={({ item }) => (
-                  // Card de Item de Viagem (Estilo do dashboardButton)
-                  <View
+                  // ALTERADO: Tornar o item clicável
+                  <TouchableOpacity
+                    onPress={() => handleVisualizarDetalhes(item.id_viagem)}
                     style={{
                       width: "100%",
-                      flexDirection: "row", // Para alinhar ícone e texto
+                      flexDirection: "row",
                       alignItems: "center",
                       backgroundColor: "#F7F8FA",
                       paddingHorizontal: 15,
                       paddingVertical: 18,
                       borderRadius: 10,
                       marginBottom: 10,
-                    }} // style={styles.dashboardButton}
+                    }}
                   >
                     <Ionicons
                       name="map-outline"
                       size={24}
-                      style={{ marginRight: 15, color: "#1F7AF3" }} // style={styles.dashboardButtonIcon}
+                      style={{ marginRight: 15, color: "#1F7AF3" }}
                     />
                     <View style={{ flex: 1 }}>
                       <Text
@@ -231,15 +232,15 @@ export default function MinhasViagensScreen() {
                       </Text>
                       <Text style={{ fontSize: 13, color: "#555" }}>
                         Vagas: {item.vagas_maximas} | Valor/km: R${" "}
-                        {item.valor_por_km.toFixed(2)}
+                        {item.valor_por_km?.toFixed(2)}
                       </Text>
                     </View>
-                  </View>
+                  </TouchableOpacity>
                 )}
               />
             )}
 
-            {/* --- BOTÃO ADICIONADO --- */}
+            {/* --- BOTÃO CADASTRO --- */}
             <TouchableOpacity
               style={{
                 width: "100%",
@@ -248,14 +249,14 @@ export default function MinhasViagensScreen() {
                 borderRadius: 10,
                 justifyContent: "center",
                 alignItems: "center",
-                marginTop: 20, // Espaçamento acima do botão
+                marginTop: 20,
                 shadowColor: "#1F7AF3",
                 shadowOffset: { width: 0, height: 3 },
                 shadowOpacity: 0.3,
                 shadowRadius: 5,
                 elevation: 6,
               }}
-              onPress={() => router.push("/criarViagem")} // Navega para a tela de criação
+              onPress={() => router.push("/criarViagem")}
             >
               <Text
                 style={{
@@ -267,7 +268,6 @@ export default function MinhasViagensScreen() {
                 Cadastrar Nova Viagem
               </Text>
             </TouchableOpacity>
-            {/* --- FIM DO BOTÃO ADICIONADO --- */}
           </View>
         </View>
       </SafeAreaView>

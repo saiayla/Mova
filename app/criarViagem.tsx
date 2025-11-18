@@ -1,4 +1,6 @@
+import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
@@ -12,23 +14,17 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-// ✅ Corrigido: `ItemType` estava importado mas não usado
-import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import DropDownPicker, { ItemType } from "react-native-dropdown-picker";
 import { SafeAreaView } from "react-native-safe-area-context";
-// 1. Corrigido: O caminho da importação precisa de '..'
-import { BASE_URL } from "./script"; // Caminho corrigido
+import { BASE_URL } from "./script";
 
-// ✅ Tipos
 type Veiculo = {
   id_veiculo: number;
   placa: string;
   modelo: string;
 };
 
-// ✅ Tipagem correta para o DropDownPicker
-type VeiculoItem = ItemType<string>; // value = placa
+type VeiculoItem = ItemType<string>;
 
 export default function CriarViagemScreen() {
   const router = useRouter();
@@ -36,13 +32,12 @@ export default function CriarViagemScreen() {
   const [origem, setOrigem] = useState("");
   const [destino, setDestino] = useState("");
   const [data, setData] = useState("");
+  const [hora, setHora] = useState(""); // 1. Novo estado para Hora
 
-  // ✅ Tipagem correta para o dropdown
   const [veiculo, setVeiculo] = useState<string | null>(null);
-  const [veiculos, setVeiculos] = useState<VeiculoItem[]>([]); // ✅ Corrigido: O estado armazena os ITENS
-  const [open, setOpen] = useState(false); // Estado para o DropDownPicker
+  const [veiculos, setVeiculos] = useState<VeiculoItem[]>([]);
+  const [open, setOpen] = useState(false);
 
-  // ✅ Buscar veículos do usuário
   useEffect(() => {
     async function buscarVeiculos() {
       try {
@@ -62,15 +57,14 @@ export default function CriarViagemScreen() {
 
         if (!response.ok) throw new Error("Erro ao buscar veículos");
 
-        const data: Veiculo[] = await response.json();
+        const dataRes: Veiculo[] = await response.json();
 
-        // ✅ Converter lista → DropDownPicker items
-        const items: VeiculoItem[] = data.map((v) => ({
+        const items: VeiculoItem[] = dataRes.map((v) => ({
           label: `${v.modelo} - ${v.placa}`,
           value: v.placa,
         }));
 
-        setVeiculos(items); // ✅ Corrigido: Salva os itens formatados
+        setVeiculos(items);
       } catch (error) {
         console.error("Erro ao carregar veículos:", error);
         Alert.alert("Erro", "Falha ao buscar veículos");
@@ -80,18 +74,14 @@ export default function CriarViagemScreen() {
     buscarVeiculos();
   }, []);
 
-  // --- 1. MUDANÇA: Função de Máscara de Data ---
+  // Máscara de Data (DD/MM/AAAA)
   const handleDateChange = (text: string) => {
-    // Remove tudo que não for dígito
     let numericText = text.replace(/[^\d]/g, "");
-
-    // Aplica a máscara DD/MM/AAAA
     if (numericText.length <= 2) {
       setData(numericText);
     } else if (numericText.length <= 4) {
       setData(`${numericText.slice(0, 2)}/${numericText.slice(2)}`);
     } else {
-      // Limita aos 8 dígitos de DDMMYYYY
       numericText = numericText.slice(0, 8);
       setData(
         `${numericText.slice(0, 2)}/${numericText.slice(
@@ -101,11 +91,23 @@ export default function CriarViagemScreen() {
       );
     }
   };
-  // --- Fim da MUDANÇA ---
 
-  // ✅ Criar viagem
+  // 2. Máscara de Hora (HH:MM)
+  const handleTimeChange = (text: string) => {
+    let numericText = text.replace(/[^\d]/g, "");
+    // Limita a 4 dígitos
+    if (numericText.length > 4) numericText = numericText.slice(0, 4);
+
+    if (numericText.length <= 2) {
+      setHora(numericText);
+    } else {
+      setHora(`${numericText.slice(0, 2)}:${numericText.slice(2)}`);
+    }
+  };
+
   const handleCriar = async () => {
-    if (!origem || !destino || !data || !veiculo) {
+    // Validação inclui a hora agora
+    if (!origem || !destino || !data || !hora || !veiculo) {
       Alert.alert("Atenção", "Preencha todos os campos antes de continuar.");
       return;
     }
@@ -117,13 +119,26 @@ export default function CriarViagemScreen() {
         return;
       }
 
+      // Validação e Montagem da Data/Hora
       const [dia, mes, ano] = data.split("/");
-      // Validação básica da data
-      if (!ano || !mes || !dia || ano.length !== 4 || data.length !== 10) {
-        Alert.alert("Erro", "Formato de data inválido. Use DD/MM/AAAA.");
+      const [horas, minutos] = hora.split(":");
+
+      if (
+        !ano ||
+        !mes ||
+        !dia ||
+        ano.length !== 4 ||
+        data.length !== 10 ||
+        !horas ||
+        !minutos ||
+        hora.length !== 5
+      ) {
+        Alert.alert("Erro", "Data ou Hora inválidas.");
         return;
       }
-      const horario_partida = `${ano}-${mes}-${dia}T08:00:00`; // 08h fixo
+
+      // 3. Formata para o padrão do Banco (YYYY-MM-DDTHH:MM:SS)
+      const horario_partida = `${ano}-${mes}-${dia}T${horas}:${minutos}:00`;
 
       const body = {
         horario_partida,
@@ -132,7 +147,7 @@ export default function CriarViagemScreen() {
         placa_veiculo: veiculo,
       };
 
-      console.log("body", body);
+      console.log("Enviando:", body);
 
       const response = await fetch(`${BASE_URL}/viagens`, {
         method: "POST",
@@ -149,11 +164,13 @@ export default function CriarViagemScreen() {
         throw new Error(result.message || "Erro ao criar viagem");
 
       Alert.alert("Sucesso", "Viagem criada com sucesso!");
-      router.push("/viagens");
+      router.replace("/viagens"); // Volta para a lista
 
+      // Limpa os campos
       setOrigem("");
       setDestino("");
       setData("");
+      setHora("");
       setVeiculo(null);
     } catch (error) {
       console.error("Erro ao criar viagem:", error);
@@ -164,10 +181,7 @@ export default function CriarViagemScreen() {
   return (
     <LinearGradient colors={["#1974F3", "#85E0FA"]} style={{ flex: 1 }}>
       <SafeAreaView
-        style={{
-          flex: 1,
-          paddingTop: Platform.OS === "android" ? 25 : 0,
-        }}
+        style={{ flex: 1, paddingTop: Platform.OS === "android" ? 25 : 0 }}
       >
         <StatusBar barStyle="light-content" />
 
@@ -187,10 +201,9 @@ export default function CriarViagemScreen() {
           behavior={Platform.OS === "ios" ? "padding" : "height"}
           style={{ flex: 1 }}
         >
-          {/* 2. Corrigido: Trocado View por ScrollView */}
           <ScrollView
             contentContainerStyle={{
-              flexGrow: 1, // Permite o scroll
+              flexGrow: 1,
               justifyContent: "center",
               alignItems: "center",
               paddingVertical: 60,
@@ -230,7 +243,6 @@ export default function CriarViagemScreen() {
                     fontWeight: "600",
                     color: "#555",
                     marginBottom: 8,
-                    alignSelf: "flex-start",
                   }}
                 >
                   Origem
@@ -262,7 +274,6 @@ export default function CriarViagemScreen() {
                     fontWeight: "600",
                     color: "#555",
                     marginBottom: 8,
-                    alignSelf: "flex-start",
                   }}
                 >
                   Destino
@@ -286,73 +297,104 @@ export default function CriarViagemScreen() {
                 />
               </View>
 
-              {/* DATA */}
-              <View style={{ width: "100%", marginBottom: 15 }}>
-                <Text
-                  style={{
-                    fontSize: 14,
-                    fontWeight: "600",
-                    color: "#555",
-                    marginBottom: 8,
-                    alignSelf: "flex-start",
-                  }}
-                >
-                  Data (DD/MM/AAAA)
-                </Text>
-                <TextInput
-                  value={data}
-                  // --- 2. MUDANÇA: onChangeText ---
-                  onChangeText={handleDateChange}
-                  // ------------------------------
-                  placeholder="Ex: 25/12/2025"
-                  placeholderTextColor="#999"
-                  style={{
-                    width: "100%",
-                    height: 50,
-                    backgroundColor: "#F7F8FA",
-                    borderRadius: 10,
-                    paddingHorizontal: 15,
-                    fontSize: 16,
-                    color: "#333",
-                    borderWidth: 1,
-                    borderColor: "#EEE",
-                  }}
-                  maxLength={10} // DD/MM/AAAA
-                  // --- 3. MUDANÇA: keyboardType ---
-                  keyboardType="numeric"
-                  // -------------------------------
-                />
+              {/* LINHA: DATA E HORA LADO A LADO */}
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  width: "100%",
+                  marginBottom: 15,
+                }}
+              >
+                {/* DATA */}
+                <View style={{ width: "48%" }}>
+                  <Text
+                    style={{
+                      fontSize: 14,
+                      fontWeight: "600",
+                      color: "#555",
+                      marginBottom: 8,
+                    }}
+                  >
+                    Data
+                  </Text>
+                  <TextInput
+                    value={data}
+                    onChangeText={handleDateChange}
+                    placeholder="DD/MM/AAAA"
+                    placeholderTextColor="#999"
+                    maxLength={10}
+                    keyboardType="numeric"
+                    style={{
+                      width: "100%",
+                      height: 50,
+                      backgroundColor: "#F7F8FA",
+                      borderRadius: 10,
+                      paddingHorizontal: 15,
+                      fontSize: 16,
+                      color: "#333",
+                      borderWidth: 1,
+                      borderColor: "#EEE",
+                      textAlign: "center",
+                    }}
+                  />
+                </View>
+
+                {/* HORA */}
+                <View style={{ width: "48%" }}>
+                  <Text
+                    style={{
+                      fontSize: 14,
+                      fontWeight: "600",
+                      color: "#555",
+                      marginBottom: 8,
+                    }}
+                  >
+                    Hora
+                  </Text>
+                  <TextInput
+                    value={hora}
+                    onChangeText={handleTimeChange}
+                    placeholder="HH:MM"
+                    placeholderTextColor="#999"
+                    maxLength={5}
+                    keyboardType="numeric"
+                    style={{
+                      width: "100%",
+                      height: 50,
+                      backgroundColor: "#F7F8FA",
+                      borderRadius: 10,
+                      paddingHorizontal: 15,
+                      fontSize: 16,
+                      color: "#333",
+                      borderWidth: 1,
+                      borderColor: "#EEE",
+                      textAlign: "center",
+                    }}
+                  />
+                </View>
               </View>
 
               {/* VEÍCULO */}
-              <View
-                style={{
-                  width: "100%",
-                  marginBottom: 15,
-                  zIndex: 1000,
-                }}
-              >
+              <View style={{ width: "100%", marginBottom: 15, zIndex: 1000 }}>
                 <Text
                   style={{
                     fontSize: 14,
                     fontWeight: "600",
                     color: "#555",
                     marginBottom: 8,
-                    alignSelf: "flex-start",
                   }}
                 >
                   Veículo
                 </Text>
-
                 <DropDownPicker
                   open={open}
                   value={veiculo}
-                  items={veiculos} // ✅ Corrigido
+                  items={veiculos}
                   setOpen={setOpen}
                   setValue={setVeiculo}
-                  setItems={setVeiculos} // ✅ Corrigido
+                  setItems={setVeiculos}
                   placeholder="Selecione o veículo"
-                  onChangeValue={(value) => setVeiculo(value as string)}
                   style={{
                     width: "100%",
                     height: 50,
@@ -360,20 +402,14 @@ export default function CriarViagemScreen() {
                     borderRadius: 10,
                     borderWidth: 1,
                     borderColor: "#EEE",
-                  }}
-                  placeholderStyle={{
-                    color: "#999",
-                    fontSize: 16,
-                  }}
-                  textStyle={{
-                    fontSize: 16,
-                    color: "#333",
                   }}
                   dropDownContainerStyle={{
                     width: "100%",
                     backgroundColor: "#F7F8FA",
                     borderColor: "#EEE",
                   }}
+                  textStyle={{ fontSize: 16, color: "#333" }}
+                  placeholderStyle={{ color: "#999", fontSize: 16 }}
                 />
               </View>
 
@@ -397,13 +433,9 @@ export default function CriarViagemScreen() {
                 onPress={handleCriar}
               >
                 <Text
-                  style={{
-                    color: "#FFFFFF",
-                    fontWeight: "bold",
-                    fontSize: 16,
-                  }}
+                  style={{ color: "#FFFFFF", fontWeight: "bold", fontSize: 16 }}
                 >
-                  Criar Viagem
+                  Agendar Viagem
                 </Text>
               </TouchableOpacity>
             </View>

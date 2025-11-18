@@ -33,6 +33,15 @@ export default function RootLayout() {
           name="passageiroConfig"
           options={{ headerShown: false }}
         />
+        <Stack.Screen
+          name="viagemDetalhesMotorista"
+          options={{ headerShown: false }}
+        />
+
+        <Stack.Screen
+          name="viagensPassageiro"
+          options={{ headerShown: false }}
+        />
         <Stack.Screen name="viagensResult" options={{ headerShown: false }} />
         <Stack.Screen name="motoristaConfig" options={{ headerShown: false }} />
         <Stack.Screen name="homeMotorista" options={{ headerShown: false }} />

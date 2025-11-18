@@ -1,19 +1,24 @@
 import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React from "react";
+import React, { useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
   FlatList,
+  Modal,
   Platform,
   StatusBar,
+  StyleSheet,
   Text,
+  TextInput, // Importante
   TouchableOpacity,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { BASE_URL } from "./script";
 
-// Definição do tipo Viagem (baseado no seu log)
 type Viagem = {
   id_viagem: number;
   local_saida: string;
@@ -29,13 +34,19 @@ type Viagem = {
 
 export default function ViagensResultScreen() {
   const router = useRouter();
+  const [loading, setLoading] = useState(false);
 
-  // 1. Recebe os parâmetros da rota (a lista de viagens filtrada)
+  // Estados do Modal e Inputs
+  const [modalVisible, setModalVisible] = useState(false);
+  const [viagemSelecionada, setViagemSelecionada] = useState<Viagem | null>(
+    null
+  );
+  const [enderecoEmbarque, setEnderecoEmbarque] = useState(""); // <-- Novo estado para o input
+
   const params = useLocalSearchParams();
   let viagens: Viagem[] = [];
 
   try {
-    // 2. Converte a string JSON de volta para um array de objetos
     if (typeof params.viagens === "string") {
       viagens = JSON.parse(params.viagens);
     }
@@ -44,7 +55,6 @@ export default function ViagensResultScreen() {
     Alert.alert("Erro", "Não foi possível carregar os resultados.");
   }
 
-  // Função para formatar a data
   const formatarData = (dataISO: string) => {
     const data = new Date(dataISO);
     return data.toLocaleString("pt-BR", {
@@ -56,57 +66,180 @@ export default function ViagensResultScreen() {
     });
   };
 
-  // Função de placeholder para quando o passageiro reservar
-  const handleReservar = (viagem: Viagem) => {
-    Alert.alert(
-      "Reservar Viagem",
-      `Você selecionou a viagem para ${
-        viagem.local_chegada
-      } por R$ ${viagem.valor_total.toFixed(
-        2
-      )}.\n\n(Implementar lógica de reserva aqui)`
-    );
-    // TODO: Adicionar lógica de check-in (POST /checkin)
+  // 1. Ao abrir o modal, preenchemos o input com a sugestão (local_saida original)
+  const abrirModalConfirmacao = (viagem: Viagem) => {
+    setViagemSelecionada(viagem);
+    setEnderecoEmbarque(viagem.local_saida); // Valor padrão
+    setModalVisible(true);
   };
 
-  // Tela Principal
+  const handleConfirmarReserva = async () => {
+    if (!viagemSelecionada) return;
+
+    // Validação simples
+    if (!enderecoEmbarque.trim()) {
+      Alert.alert("Atenção", "Por favor, informe o local de embarque.");
+      return;
+    }
+
+    setModalVisible(false);
+    setLoading(true);
+
+    try {
+      const token = await AsyncStorage.getItem("token");
+
+      if (!token) {
+        Alert.alert("Erro", "Usuário não autenticado. Faça login novamente.");
+        setLoading(false);
+        return;
+      }
+
+      // 2. Envia o texto digitado pelo usuário como ponto_embarque
+      const payload = {
+        id_viagem: viagemSelecionada.id_viagem,
+        ponto_embarque: enderecoEmbarque,
+      };
+
+      const response = await fetch(`${BASE_URL}/checkin`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const textData = await response.text();
+      let data;
+      try {
+        data = JSON.parse(textData);
+      } catch (jsonError) {
+        Alert.alert("Erro no Servidor", "Resposta inválida do servidor.");
+        setLoading(false);
+        return;
+      }
+
+      if (response.ok) {
+        Alert.alert(
+          "Sucesso!",
+          "Sua reserva foi realizada. O motorista verá seu local de embarque.",
+          [{ text: "OK", onPress: () => router.replace("/homePassageiro") }]
+        );
+      } else {
+        Alert.alert(
+          "Atenção",
+          data.message || "Não foi possível realizar a reserva."
+        );
+      }
+    } catch (error) {
+      Alert.alert(
+        "Erro de Conexão",
+        "Verifique sua internet e tente novamente."
+      );
+    } finally {
+      setLoading(false);
+      setViagemSelecionada(null);
+      setEnderecoEmbarque("");
+    }
+  };
+
   return (
-    <LinearGradient
-      colors={["#1974F3", "#85E0FA"]}
-      style={{ flex: 1 }} // style={styles.gradientBackground}
-    >
+    <LinearGradient colors={["#1974F3", "#85E0FA"]} style={{ flex: 1 }}>
       <SafeAreaView
-        style={{
-          flex: 1,
-          paddingTop: Platform.OS === "android" ? 25 : 0,
-        }} // style={styles.safeArea}
+        style={{ flex: 1, paddingTop: Platform.OS === "android" ? 25 : 0 }}
       >
         <StatusBar barStyle="light-content" />
 
-        {/* Botão de Voltar Padronizado */}
+        {/* Botão Voltar */}
         <TouchableOpacity
           onPress={() => router.back()}
+          disabled={loading}
           style={{
             position: "absolute",
             top: Platform.OS === "android" ? 35 : 10,
             left: 20,
             zIndex: 1,
-          }} // style={styles.backButton}
+            opacity: loading ? 0.5 : 1,
+          }}
         >
           <Ionicons name="arrow-back-circle" size={40} color="white" />
         </TouchableOpacity>
 
-        {/* Container Principal */}
+        {/* Loading Geral */}
+        {loading && (
+          <View style={styles.loadingOverlay}>
+            <ActivityIndicator size="large" color="#fff" />
+          </View>
+        )}
+
+        {/* --- MODAL COM INPUT --- */}
+        <Modal
+          animationType="fade"
+          transparent={true}
+          visible={modalVisible}
+          onRequestClose={() => {
+            setModalVisible(false);
+            setViagemSelecionada(null);
+          }}
+        >
+          {/* KeyboardAvoidingView para o teclado não cobrir o modal */}
+          <View style={styles.centeredView}>
+            <View style={styles.modalView}>
+              <Ionicons name="location-outline" size={40} color="#1974F3" />
+              <Text style={styles.modalTitle}>Ponto de Encontro</Text>
+
+              <Text style={styles.modalText}>
+                Onde o motorista deve te buscar?
+              </Text>
+
+              {/* Input de Endereço */}
+              <TextInput
+                style={styles.modalInput}
+                value={enderecoEmbarque}
+                onChangeText={setEnderecoEmbarque}
+                placeholder="Ex: Ponto de ônibus da praça..."
+                placeholderTextColor="#999"
+                multiline
+              />
+
+              {viagemSelecionada && (
+                <Text style={styles.priceText}>
+                  Valor Total: R$ {viagemSelecionada.valor_total.toFixed(2)}
+                </Text>
+              )}
+
+              <View style={styles.modalButtons}>
+                <TouchableOpacity
+                  style={[styles.button, styles.buttonClose]}
+                  onPress={() => {
+                    setModalVisible(false);
+                    setViagemSelecionada(null);
+                  }}
+                >
+                  <Text style={styles.textStyle}>Cancelar</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.button, styles.buttonConfirm]}
+                  onPress={handleConfirmarReserva}
+                >
+                  <Text style={styles.textStyle}>Confirmar</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
+
+        {/* LISTA PRINCIPAL */}
         <View
           style={{
             flexGrow: 1,
-            justifyContent: "center", // Centraliza o card
+            justifyContent: "center",
             alignItems: "center",
-            paddingVertical: 60, // Espaço em cima e embaixo
-            paddingHorizontal: "5%", // Garante 5% de margem nas laterais
-          }} // style={styles.scrollContainer}
+            paddingVertical: 60,
+            paddingHorizontal: "5%",
+          }}
         >
-          {/* Card Branco Flutuante */}
           <View
             style={{
               width: "100%",
@@ -119,23 +252,21 @@ export default function ViagensResultScreen() {
               shadowOpacity: 0.15,
               shadowRadius: 10,
               elevation: 10,
-              maxHeight: "95%", // Garante que o card não estoure a tela
-            }} // style={styles.formContainer}
+              maxHeight: "95%",
+            }}
           >
-            {/* Título */}
             <Text
               style={{
                 fontSize: 28,
                 fontWeight: "bold",
                 color: "#333",
                 marginBottom: 25,
-              }} // style={styles.dashboardTitle}
+              }}
             >
               Viagens Encontradas
             </Text>
 
             {viagens.length === 0 ? (
-              // Mensagem de "Nenhuma viagem"
               <Text
                 style={{
                   fontSize: 16,
@@ -143,35 +274,36 @@ export default function ViagensResultScreen() {
                   textAlign: "center",
                   marginTop: 20,
                   marginBottom: 20,
-                }} // style={styles.dashboardSubtitle}
+                }}
               >
                 Nenhuma viagem encontrada para esta rota.
               </Text>
             ) : (
-              // Lista de Viagens
               <FlatList
                 data={viagens}
                 keyExtractor={(item) => item.id_viagem.toString()}
-                style={{ width: "100%" }} // Garante que a FlatList use a largura total do card
+                style={{ width: "100%" }}
                 renderItem={({ item }) => (
-                  // Card de Item de Viagem (Clicável)
                   <TouchableOpacity
+                    disabled={loading}
                     style={{
                       width: "100%",
-                      flexDirection: "row", // Para alinhar ícone e texto
+                      flexDirection: "row",
                       alignItems: "center",
                       backgroundColor: "#F7F8FA",
                       paddingHorizontal: 15,
                       paddingVertical: 18,
                       borderRadius: 10,
                       marginBottom: 10,
-                    }} // style={styles.dashboardButton}
-                    onPress={() => handleReservar(item)} // Ação de clique
+                      borderWidth: 1,
+                      borderColor: "transparent",
+                    }}
+                    onPress={() => abrirModalConfirmacao(item)}
                   >
                     <Ionicons
-                      name="bus-outline" // Ícone de Van/Ônibus
+                      name="bus-outline"
                       size={32}
-                      style={{ marginRight: 15, color: "#1F7AF3" }} // style={styles.dashboardButtonIcon}
+                      style={{ marginRight: 15, color: "#1F7AF3" }}
                     />
                     <View style={{ flex: 1 }}>
                       <Text
@@ -185,7 +317,7 @@ export default function ViagensResultScreen() {
                         {item.modelo} ({item.placa_veiculo})
                       </Text>
                       <Text style={{ fontSize: 13, color: "#555" }}>
-                        De: {item.local_saida} Para: {item.local_chegada}
+                        Para: {item.local_chegada}
                       </Text>
                       <Text style={{ fontSize: 13, color: "#555" }}>
                         Partida: {formatarData(item.horario_partida)}
@@ -195,7 +327,6 @@ export default function ViagensResultScreen() {
                       </Text>
                     </View>
 
-                    {/* Preço Total (Baseado na imagem) */}
                     <Text
                       style={{
                         fontSize: 16,
@@ -216,3 +347,91 @@ export default function ViagensResultScreen() {
     </LinearGradient>
   );
 }
+
+const styles = StyleSheet.create({
+  loadingOverlay: {
+    position: "absolute",
+    zIndex: 10,
+    width: "100%",
+    height: "100%",
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0,0,0,0.3)",
+  },
+  centeredView: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0,0,0,0.5)",
+    paddingHorizontal: 20, // Evita encostar na borda
+  },
+  modalView: {
+    width: "100%",
+    backgroundColor: "white",
+    borderRadius: 20,
+    padding: 25,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  modalTitle: {
+    fontSize: 22,
+    fontWeight: "bold",
+    marginTop: 10,
+    marginBottom: 5,
+    textAlign: "center",
+    color: "#333",
+  },
+  modalText: {
+    marginBottom: 15,
+    textAlign: "center",
+    fontSize: 15,
+    color: "#666",
+  },
+  // Estilo do Input no Modal
+  modalInput: {
+    width: "100%",
+    backgroundColor: "#F5F5F5",
+    borderRadius: 10,
+    padding: 15,
+    fontSize: 16,
+    borderWidth: 1,
+    borderColor: "#DDD",
+    marginBottom: 15,
+    color: "#333",
+    minHeight: 50,
+  },
+  priceText: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#1974F3",
+    marginBottom: 20,
+  },
+  modalButtons: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "100%",
+  },
+  button: {
+    borderRadius: 10,
+    padding: 12,
+    elevation: 2,
+    width: "48%",
+    alignItems: "center",
+  },
+  buttonClose: {
+    backgroundColor: "#FF6347",
+  },
+  buttonConfirm: {
+    backgroundColor: "#1974F3",
+  },
+  textStyle: {
+    color: "white",
+    fontWeight: "bold",
+    textAlign: "center",
+    fontSize: 16,
+  },
+});

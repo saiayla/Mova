@@ -170,6 +170,44 @@ export default function PerfilMotoristaScreen() {
               />
             </TouchableOpacity>
 
+            <TouchableOpacity
+              style={{
+                width: "100%",
+                flexDirection: "row",
+                alignItems: "center",
+                backgroundColor: "#F7F8FA",
+                paddingHorizontal: 15,
+                paddingVertical: 18,
+                borderRadius: 10,
+                marginBottom: 15,
+              }} // style={styles.dashboardButton}
+              onPress={() => router.push("/viagensPassageiro")}
+            >
+              <Ionicons
+                name="car-sport-outline"
+                size={24}
+                style={{
+                  marginRight: 15,
+                  color: "#1F7AF3",
+                }} // style={styles.dashboardButtonIcon}
+              />
+              <Text
+                style={{
+                  flex: 1,
+                  fontSize: 16,
+                  fontWeight: "600",
+                  color: "#333",
+                }} // style={styles.dashboardButtonText}
+              >
+                Corridas Passageiro
+              </Text>
+              <Ionicons
+                name="chevron-forward-outline"
+                size={20}
+                style={{ color: "#999" }} // style={styles.dashboardButtonChevron}
+              />
+            </TouchableOpacity>
+
             {/* <TouchableOpacity
               style={{
                 width: "100%",

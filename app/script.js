@@ -205,6 +205,7 @@ export async function login({ email, senha, router }) {
     // --- CORREÇÃO DE ERRO DE REDE ---
     // Esta mensagem de erro personalizada ajuda a identificar o problema de 'localhost'
     let message = error instanceof Error ? error.message : String(error);
+    console.log("message", message);
 
     if (message.includes("Network request failed")) {
       message =
