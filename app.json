@@ -8,6 +8,9 @@
     "scheme": "mova",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "extra": {
+      "expoPublicOrsApiKey": "eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6ImI1MDY3ODU2OTk1NzQwMjJiNmI1ZjNkMGQ3MDJkOGYwIiwiaCI6Im11cm11cjY0In0="
+    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.laila.mova"

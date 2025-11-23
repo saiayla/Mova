@@ -12,31 +12,21 @@ import {
   View,
 } from "react-native";
 import MapView, { Marker, Region } from "react-native-maps";
-// --- MUDANÇA ---
-// Importe o hook 'useSafeAreaInsets'
-import { useRouter } from "expo-router"; // <-- MUDANÇA: Adicionado para o botão funcionar
+import { useRouter } from "expo-router"; 
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-// Pega a altura da tela para o mapa
 const { height } = Dimensions.get("window");
 
 export default function HomePassageiro() {
-  // --- MUDANÇA ---
-  // Pega o valor dos "insets" (área segura, ex: notch)
   const insets = useSafeAreaInsets();
-  const router = useRouter(); // <-- MUDANÇA: Adicionado para o botão funcionar
+  const router = useRouter(); 
 
-  // Estado para a região do mapa (localização do usuário)
   const [region, setRegion] = useState<Region | undefined>(undefined);
-
-  // Estados para os campos de input
   const [partida, setPartida] = useState("Universidade Vila Velha");
   const [destino, setDestino] = useState("R. Cristóvão Colombo, 479");
 
-  // Efeito para buscar a localização do usuário ao abrir a tela
   useEffect(() => {
     (async () => {
-      // 1. Pede permissão para acessar a localização
       let { status } = await Location.requestForegroundPermissionsAsync();
 
       if (status !== "granted") {
@@ -44,7 +34,6 @@ export default function HomePassageiro() {
           "Permissão negada",
           "Para usar esta funcionalidade, precisamos da sua localização."
         );
-        // Define uma localização padrão (Ex: Vila Velha) se a permissão for negada
         setRegion({
           latitude: -20.355,
           longitude: -40.29,
@@ -54,41 +43,36 @@ export default function HomePassageiro() {
         return;
       }
 
-      // 2. Pega a localização atual
       try {
         let location = await Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.Balanced, // Precisão balanceada para performance
+          accuracy: Location.Accuracy.Balanced, 
         });
 
-        // 3. Define a região do mapa para a localização do usuário
         setRegion({
           latitude: location.coords.latitude,
           longitude: location.coords.longitude,
-          latitudeDelta: 0.04, // Zoom do mapa
-          longitudeDelta: 0.04, // Zoom do mapa
+          latitudeDelta: 0.04, 
+          longitudeDelta: 0.04, 
         });
       } catch (error) {
         console.error("Erro ao buscar localização: ", error);
         Alert.alert("Erro", "Não foi possível obter sua localização.");
       }
     })();
-  }, []); // O array vazio [] garante que isso rode apenas uma vez
+  }, []); 
 
   return (
-    // --- MUDANÇA ---
-    // Removemos a SafeAreaView daqui e usamos um View normal
-    // para o mapa ir de ponta a ponta
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" />
 
       {/* --- O MAPA --- */}
       <MapView
         style={styles.map}
-        region={region} // O mapa será focado na região do usuário
-        showsUserLocation={true} // Mostra o "ponto azul" da localização
-        loadingEnabled={true} // Mostra um indicador de loading
+        region={region} 
+        showsUserLocation={true} 
+        loadingEnabled={true} 
       >
-        {/* Você pode adicionar um marcador se quiser, como na imagem */}
+        {/*adicionar um marcador */}
         {region && (
           <Marker
             coordinate={{
@@ -154,9 +138,9 @@ export default function HomePassageiro() {
       </View>
 
       {/* --- MUDANÇA --- */}
-      {/* Botão de Perfil Flutuante */}
-      {/* Ele fica DEPOIS do MapView e do bottomSheet, mas antes do fim do container */}
-      {/* Usamos o 'insets.top' para ele não ficar embaixo da barra de status */}
+      {/* Botão de Perfil */}
+      {/*  DEPOIS do MapView e do bottomSheet, mas antes do fim do container */}
+      {/*'insets.top'  */}
       <TouchableOpacity
         style={[styles.profileButton, { top: insets.top + 10 }]}
         onPress={() => router.replace("/motoristaConfig")} // Mude para a rota correta do perfil
@@ -170,22 +154,20 @@ export default function HomePassageiro() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff", // Fundo padrão
+    backgroundColor: "#fff", 
   },
   map: {
     width: "100%",
-    height: height * 0.65, // O mapa ocupa 65% da altura da tela
+    height: height * 0.65, 
   },
   bottomSheet: {
-    flex: 1, // Ocupa o restante do espaço (35%)
-    // height: "35%",
+    flex: 1, 
     backgroundColor: "white",
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     paddingHorizontal: 20,
     paddingVertical: 25,
-    marginTop: -20, // Puxa o card para cima, sobrepondo o mapa
-    // Sombra para destacar o card
+    marginTop: -20, 
     shadowColor: "#000",
     shadowOffset: { width: 0, height: -3 },
     shadowOpacity: 0.1,
@@ -199,7 +181,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   locationInputContainer: {
-    position: "relative", // Necessário para a linha pontilhada
+    position: "relative", 
     marginBottom: 15,
   },
   inputRow: {
@@ -209,7 +191,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     paddingHorizontal: 15,
     paddingVertical: 6,
-    marginBottom: 10, // Espaço entre os inputs
+    marginBottom: 10,
   },
   icon: {
     marginRight: 10,
@@ -221,22 +203,19 @@ const styles = StyleSheet.create({
   },
   connectorLine: {
     position: "absolute",
-    left: 24, // Alinhado com os ícones
-    top: 45, // Posição vertical entre os inputs
-    height: 30, // Altura da linha
+    left: 24, 
+    top: 45, 
+    height: 30, 
     width: 1,
     borderLeftWidth: 1,
     borderLeftColor: "#999",
     borderStyle: "dashed",
   },
-  // Removi o timeButton que estava comentado
   searchButton: {
-    backgroundColor: "#007AFF", // Azul (padrão Apple/Google)
+    backgroundColor: "#007AFF", 
     padding: 15,
     borderRadius: 10,
     alignItems: "center",
-    // --- MUDANÇA ---
-    // Adicionei a margem aqui, já que o card não é mais um ScrollView
     marginHorizontal: 20,
     marginBottom: 20,
   },
@@ -246,14 +225,12 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
 
-  // --- MUDANÇA ---
-  // Estilo para o novo botão de perfil flutuante
   profileButton: {
     position: "absolute",
-    left: 20, // <-- ALTERADO DE 'right: 20' PARA 'left: 20'
+    left: 20, 
     width: 50,
     height: 50,
-    borderRadius: 25, // Metade do width/height para ser circular
+    borderRadius: 25, 
     backgroundColor: "white",
     justifyContent: "center",
     alignItems: "center",
@@ -261,7 +238,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
-    elevation: 5, // Sombra para Android
-    zIndex: 10, // Garante que ele fique sobre tudo
+    elevation: 5,
+    zIndex: 10, 
   },
 });

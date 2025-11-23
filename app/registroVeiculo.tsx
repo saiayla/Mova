@@ -14,10 +14,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-
-// Importa a função de cadastro e os estilos globais
 import { cadastrarVeiculo } from "./script";
-// Removida a importação de 'globalStyles'
 
 export default function RegistroVeiculoScreen() {
   const router = useRouter();
@@ -29,7 +26,6 @@ export default function RegistroVeiculoScreen() {
   const [passageiros_maximos, setPassageiros_maximos] = useState("");
   const [chassi, setChassi] = useState("");
 
-  // Wrapper para a função de cadastro, para passar o router
   const handleCadastro = () => {
     cadastrarVeiculo({
       tipo,
@@ -39,24 +35,23 @@ export default function RegistroVeiculoScreen() {
       passageiros_maximos,
       chassi,
       router,
-      //   router, // Passando o router para o script
     });
   };
 
   return (
     <LinearGradient
       colors={["#1974F3", "#85E0FA"]}
-      style={{ flex: 1 }} // style={styles.gradientBackground}
+      style={{ flex: 1 }}
     >
       <SafeAreaView
         style={{
           flex: 1,
           paddingTop: Platform.OS === "android" ? 25 : 0,
-        }} // style={styles.safeArea}
+        }} 
       >
         <StatusBar barStyle="light-content" />
 
-        {/* Botão de Voltar Padronizado */}
+        {/* Botão de Voltar */}
         <TouchableOpacity
           onPress={() => router.back()}
           style={{
@@ -64,7 +59,7 @@ export default function RegistroVeiculoScreen() {
             top: Platform.OS === "android" ? 35 : 10,
             left: 20,
             zIndex: 1,
-          }} // style={styles.backButton}
+          }} 
         >
           <Ionicons name="arrow-back-circle" size={40} color="white" />
         </TouchableOpacity>
@@ -80,7 +75,7 @@ export default function RegistroVeiculoScreen() {
               alignItems: "center",
               paddingVertical: 60,
               paddingHorizontal: "5%",
-            }} // style={styles.scrollContainer}
+            }} 
           >
             {/* Card Branco Flutuante */}
             <View
@@ -98,7 +93,7 @@ export default function RegistroVeiculoScreen() {
                 shadowOpacity: 0.15,
                 shadowRadius: 10,
                 elevation: 10,
-              }} // style={styles.formContainer}
+              }} 
             >
               <Text
                 style={{
@@ -106,7 +101,7 @@ export default function RegistroVeiculoScreen() {
                   fontWeight: "bold",
                   color: "#333",
                   marginBottom: 25,
-                }} // style={styles.title}
+                }} 
               >
                 Novo Veículo
               </Text>
@@ -116,7 +111,7 @@ export default function RegistroVeiculoScreen() {
                 style={{
                   width: "100%",
                   marginBottom: 15,
-                }} // style={styles.inputGroup}
+                }} 
               >
                 <Text
                   style={{
@@ -125,7 +120,7 @@ export default function RegistroVeiculoScreen() {
                     color: "#555",
                     marginBottom: 8,
                     alignSelf: "flex-start",
-                  }} // style={styles.label}
+                  }} 
                 >
                   Tipo de Veículo
                 </Text>
@@ -136,13 +131,11 @@ export default function RegistroVeiculoScreen() {
                     height: 50,
                     backgroundColor: "#F7F8FA",
                     borderRadius: 10,
-                    paddingHorizontal: 15, // Padding para o <View>
-                    // fontSize: 16,
-                    // color: "#333",
+                    paddingHorizontal: 15, 
                     borderWidth: 1,
                     borderColor: "#EEE",
-                    justifyContent: "center", // Centraliza o Picker verticalmente
-                  }} // style={styles.input}
+                    justifyContent: "center", 
+                  }}
                 >
                   <Picker
                     selectedValue={tipo}
@@ -152,8 +145,7 @@ export default function RegistroVeiculoScreen() {
                       width: "100%",
                       height: 50,
                       color: tipo ? "#333" : "#999",
-                      // Ajustes finos para alinhar o Picker
-                      marginLeft: -15, // Compensa o paddingHorizontal do wrapper
+                      marginLeft: -15, 
                       marginRight: -15,
                     }}
                   >
@@ -174,7 +166,7 @@ export default function RegistroVeiculoScreen() {
                 style={{
                   width: "100%",
                   marginBottom: 15,
-                }} // style={styles.inputGroup}
+                }} 
               >
                 <Text
                   style={{
@@ -183,7 +175,7 @@ export default function RegistroVeiculoScreen() {
                     color: "#555",
                     marginBottom: 8,
                     alignSelf: "flex-start",
-                  }} // style={styles.label}
+                  }} 
                 >
                   Placa
                 </Text>
@@ -202,7 +194,7 @@ export default function RegistroVeiculoScreen() {
                     color: "#333",
                     borderWidth: 1,
                     borderColor: "#EEE",
-                  }} // style={styles.input}
+                  }} 
                   autoCapitalize="characters"
                   maxLength={7}
                 />
@@ -213,7 +205,7 @@ export default function RegistroVeiculoScreen() {
                 style={{
                   width: "100%",
                   marginBottom: 15,
-                }} // style={styles.inputGroup}
+                }}
               >
                 <Text
                   style={{
@@ -222,7 +214,7 @@ export default function RegistroVeiculoScreen() {
                     color: "#555",
                     marginBottom: 8,
                     alignSelf: "flex-start",
-                  }} // style={styles.label}
+                  }} 
                 >
                   Modelo
                 </Text>
@@ -241,7 +233,7 @@ export default function RegistroVeiculoScreen() {
                     color: "#333",
                     borderWidth: 1,
                     borderColor: "#EEE",
-                  }} // style={styles.input}
+                  }} 
                 />
               </View>
 
@@ -250,7 +242,7 @@ export default function RegistroVeiculoScreen() {
                 style={{
                   width: "100%",
                   marginBottom: 15,
-                }} // style={styles.inputGroup}
+                }} 
               >
                 <Text
                   style={{
@@ -259,7 +251,7 @@ export default function RegistroVeiculoScreen() {
                     color: "#555",
                     marginBottom: 8,
                     alignSelf: "flex-start",
-                  }} // style={styles.label}
+                  }} 
                 >
                   Cor
                 </Text>
@@ -270,12 +262,10 @@ export default function RegistroVeiculoScreen() {
                     backgroundColor: "#F7F8FA",
                     borderRadius: 10,
                     paddingHorizontal: 15,
-                    // fontSize: 16,
-                    // color: "#333",
                     borderWidth: 1,
                     borderColor: "#EEE",
                     justifyContent: "center",
-                  }} // style={styles.input}
+                  }}
                 >
                   <Picker
                     selectedValue={cor}
@@ -311,7 +301,7 @@ export default function RegistroVeiculoScreen() {
                 style={{
                   width: "100%",
                   marginBottom: 15,
-                }} // style={styles.inputGroup}
+                }} 
               >
                 <Text
                   style={{
@@ -320,7 +310,7 @@ export default function RegistroVeiculoScreen() {
                     color: "#555",
                     marginBottom: 8,
                     alignSelf: "flex-start",
-                  }} // style={styles.label}
+                  }} 
                 >
                   Capacidade de Passageiros
                 </Text>
@@ -340,7 +330,7 @@ export default function RegistroVeiculoScreen() {
                     color: "#333",
                     borderWidth: 1,
                     borderColor: "#EEE",
-                  }} // style={styles.input}
+                  }} 
                 />
               </View>
 
@@ -349,7 +339,7 @@ export default function RegistroVeiculoScreen() {
                 style={{
                   width: "100%",
                   marginBottom: 15,
-                }} // style={styles.inputGroup}
+                }} 
               >
                 <Text
                   style={{
@@ -358,7 +348,7 @@ export default function RegistroVeiculoScreen() {
                     color: "#555",
                     marginBottom: 8,
                     alignSelf: "flex-start",
-                  }} // style={styles.label}
+                  }} 
                 >
                   Chassi
                 </Text>
@@ -377,7 +367,7 @@ export default function RegistroVeiculoScreen() {
                     color: "#333",
                     borderWidth: 1,
                     borderColor: "#EEE",
-                  }} // style={styles.input}
+                  }}
                   autoCapitalize="characters"
                   maxLength={17}
                 />
@@ -401,7 +391,7 @@ export default function RegistroVeiculoScreen() {
                   shadowOpacity: 0.3,
                   shadowRadius: 5,
                   elevation: 6,
-                }} // style={styles.loginButton}
+                }} 
                 onPress={handleCadastro}
               >
                 <Text
@@ -409,7 +399,7 @@ export default function RegistroVeiculoScreen() {
                     color: "#FFFFFF",
                     fontWeight: "bold",
                     fontSize: 16,
-                  }} // style={styles.buttonText}
+                  }} 
                 >
                   Cadastrar Veículo
                 </Text>

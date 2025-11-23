@@ -15,15 +15,14 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { BASE_URL } from "./script"; // Verifique se o caminho está correto (pode ser ../script)
+import { BASE_URL } from "./script";
 
-// Tipo dos dados que esperamos do backend
 type CheckinDetalhe = {
   id_checkin: number;
   ponto_embarque: string;
   nome_passageiro: string;
   num_telefone: string;
-  horario_partida?: string; // Opcional pois depende da query do backend
+  horario_partida?: string;
   sem_passageiros?: boolean;
 };
 
@@ -35,8 +34,6 @@ export default function ViagemDetalhesMotorista() {
   const [checkins, setCheckins] = useState<CheckinDetalhe[]>([]);
   const [loading, setLoading] = useState(true);
   const [horarioViagem, setHorarioViagem] = useState<string | null>(null);
-
-  console.log("checkins", checkins);
 
   useEffect(() => {
     async function carregarDetalhes() {
@@ -50,31 +47,30 @@ export default function ViagemDetalhesMotorista() {
 
         if (!id_viagem) return;
 
-        const response = await fetch(
-          `${BASE_URL}/viagens/${id_viagem}/checkins`,
-          {
-            method: "GET",
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        const response = await fetch(`${BASE_URL}/check-in/viagens/${id_viagem}`, {
+          method: "GET",
+          headers: { Authorization: `Bearer ${token}` },
+        });
 
-        const data = await response.json();
+        const textData = await response.text();
+        let data: any = [];
 
-        if (!response.ok) {
-          throw new Error(data.message || "Erro ao carregar detalhes.");
+        try {
+          data = textData ? JSON.parse(textData) : [];
+        } catch {
+          Alert.alert("Erro", "Resposta inválida do servidor.");
+          return;
         }
 
-        // Lógica para extrair dados
-        if (Array.isArray(data) && data.length > 0) {
-          setCheckins(data);
-          // Pega o horário do primeiro passageiro (já que é o mesmo para todos na viagem)
-          if (data[0].horario_partida) {
-            setHorarioViagem(data[0].horario_partida);
-          }
-        } else {
-          setCheckins([]);
+        if (!response.ok) {
+          Alert.alert("Erro", data?.message || "Não foi possível carregar os check-ins.");
+          return;
+        }
+
+        setCheckins(data);
+
+        if (data.length > 0 && data[0].horario_partida) {
+          setHorarioViagem(data[0].horario_partida);
         }
       } catch (error) {
         console.error("Erro detalhe viagem:", error);
@@ -87,7 +83,6 @@ export default function ViagemDetalhesMotorista() {
     carregarDetalhes();
   }, [id_viagem]);
 
-  // Função para abrir o discador
   const handleLigar = (telefone: string) => {
     const numeroLimpo = telefone.replace(/[^0-9]/g, "");
     const url = `tel:${numeroLimpo}`;
@@ -102,20 +97,15 @@ export default function ViagemDetalhesMotorista() {
       .catch((err) => console.error("Erro ao ligar", err));
   };
 
-  // Formatação de Horário (ex: 08:30)
   const formatarHorario = (dataISO: string) => {
     if (!dataISO) return "--:--";
     const data = new Date(dataISO);
     return data.toLocaleString("pt-BR", {
       hour: "2-digit",
       minute: "2-digit",
-      // Se quiser mostrar o dia também, descomente abaixo:
-      // day: "2-digit",
-      // month: "2-digit",
     });
   };
 
-  // Loading com o visual do gradiente
   if (loading) {
     return (
       <LinearGradient colors={["#1974F3", "#85E0FA"]} style={{ flex: 1 }}>
@@ -135,7 +125,6 @@ export default function ViagemDetalhesMotorista() {
       >
         <StatusBar barStyle="light-content" />
 
-        {/* Botão Voltar (Padrão das outras telas) */}
         <TouchableOpacity
           onPress={() => router.back()}
           style={{
@@ -148,7 +137,6 @@ export default function ViagemDetalhesMotorista() {
           <Ionicons name="arrow-back-circle" size={40} color="white" />
         </TouchableOpacity>
 
-        {/* Container Principal */}
         <View
           style={{
             flexGrow: 1,
@@ -158,7 +146,6 @@ export default function ViagemDetalhesMotorista() {
             paddingHorizontal: "5%",
           }}
         >
-          {/* Card Branco Flutuante */}
           <View
             style={{
               width: "100%",
@@ -171,10 +158,9 @@ export default function ViagemDetalhesMotorista() {
               shadowOpacity: 0.15,
               shadowRadius: 10,
               elevation: 10,
-              maxHeight: "95%", // Garante que não estoure a tela
+              maxHeight: "95%",
             }}
           >
-            {/* Título do Card */}
             <Text
               style={{
                 fontSize: 24,
@@ -186,7 +172,6 @@ export default function ViagemDetalhesMotorista() {
               Detalhes da Viagem
             </Text>
 
-            {/* Destaque do Horário */}
             {horarioViagem ? (
               <View
                 style={{
@@ -238,7 +223,6 @@ export default function ViagemDetalhesMotorista() {
               Lista de Passageiros ({checkins.length})
             </Text>
 
-            {/* Lista */}
             {checkins.length === 0 || checkins?.[0]?.sem_passageiros ? (
               <View
                 style={{
@@ -265,15 +249,14 @@ export default function ViagemDetalhesMotorista() {
                     style={{
                       flexDirection: "row",
                       alignItems: "center",
-                      backgroundColor: "#F7F8FA", // Fundo cinza claro igual ao MinhasViagens
+                      backgroundColor: "#F7F8FA",
                       padding: 15,
                       borderRadius: 12,
                       marginBottom: 10,
                       borderLeftWidth: 4,
-                      borderLeftColor: "#1974F3", // Detalhe visual azul
+                      borderLeftColor: "#1974F3",
                     }}
                   >
-                    {/* Marcador Visual (1, 2, 3...) */}
                     <View style={{ marginRight: 15, alignItems: "center" }}>
                       <View
                         style={{
@@ -297,7 +280,6 @@ export default function ViagemDetalhesMotorista() {
                       </View>
                     </View>
 
-                    {/* Dados do Passageiro */}
                     <View style={{ flex: 1 }}>
                       <Text
                         style={{
@@ -328,7 +310,6 @@ export default function ViagemDetalhesMotorista() {
                       </View>
                     </View>
 
-                    {/* Botão Ligar (Verde para destaque) */}
                     <TouchableOpacity
                       onPress={() => handleLigar(item.num_telefone)}
                       style={{

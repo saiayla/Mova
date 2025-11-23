@@ -4,25 +4,21 @@ import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React, { useState } from "react";
 import {
-  KeyboardAvoidingView, // Importa o ScrollView para formulários longos
+  KeyboardAvoidingView,
   LayoutAnimation,
   Platform,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
-  TouchableOpacity, // Para a animação do campo CNH
+  TouchableOpacity,
   UIManager,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-// Importa AMBAS as funções de cadastro do seu script
 import { cadastroMotorista, cadastroPassageiro } from "./script.js";
-// Importa os estilos GLOBAIS (que vamos atualizar)
-// import { globalStyles as styles } from "./style";
 
-// Habilita LayoutAnimation no Android
 if (
   Platform.OS === "android" &&
   UIManager.setLayoutAnimationEnabledExperimental
@@ -33,34 +29,28 @@ if (
 export default function CadastroScreen() {
   const router = useRouter();
 
-  // Estado para o tipo de usuário (controla o seletor)
   const [userType, setUserType] = useState<"passageiro" | "motorista">(
     "passageiro"
   );
 
-  // Estados para os campos do formulário
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
   const [num_telefone, setNum_telefone] = useState("");
   const [endereco, setEndereco] = useState("");
   const [senha, setSenha] = useState("");
-  const [cnh, setCnh] = useState(""); // Campo condicional
+  const [cnh, setCnh] = useState(""); 
 
-  // Função para trocar o tipo de usuário com animação
   const toggleUserType = (type: "passageiro" | "motorista") => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setUserType(type);
   };
 
-  // Função unificada de cadastro
   const handleCadastro = () => {
     const commonData = { nome, email, num_telefone, endereco, senha, router };
 
     if (userType === "motorista") {
-      // Chama a função de motorista com a CNH
       cadastroMotorista({ ...commonData, cnh });
     } else {
-      // Chama a função de passageiro
       cadastroPassageiro(commonData);
     }
   };
@@ -80,14 +70,14 @@ export default function CadastroScreen() {
 
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}
-          style={{ flex: 1 }} // Garante que o KAV ocupe o espaço
+          style={{ flex: 1 }} 
         >
-          {/* ScrollView é essencial para formulários que podem ser maiores que a tela */}
+          {/* ScrollView */}
           <ScrollView contentContainerStyle={styles.scrollContainer}>
             <View style={styles.formContainer}>
               <Text style={styles.title}>Criar Conta</Text>
 
-              {/* --- SELETOR DE TIPO DE USUÁRIO --- */}
+              {/* --- TIPO DE USUÁRIO --- */}
               <View style={styles.userTypeSelector}>
                 <TouchableOpacity
                   style={[
@@ -192,7 +182,7 @@ export default function CadastroScreen() {
                 />
               </View>
 
-              {/* --- CAMPO CONDICIONAL (CNH) --- */}
+              {/* (CNH) */}
               {userType === "motorista" && (
                 <View style={styles.inputGroup}>
                   <Text style={styles.label}>CNH</Text>
@@ -216,7 +206,7 @@ export default function CadastroScreen() {
               </TouchableOpacity>
             </View>
 
-            {/* Link para voltar ao Login */}
+            {/* voltar ao Login */}
             <TouchableOpacity
               onPress={() => router.push("/login")}
               style={styles.signupContainer}
@@ -238,37 +228,34 @@ export default function CadastroScreen() {
 const COLORS = {
   primary: "#1F7AF3",
   white: "#FFFFFF",
-  lightGray: "#F7F8FA", // Fundo do input e seletor inativo
-  mediumGray: "#999", // Texto do placeholder
-  darkGray: "#333", // Texto principal
+  lightGray: "#F7F8FA", 
+  mediumGray: "#999", 
+  darkGray: "#333", 
   textLabel: "#555",
   gradientStart: "#1974F3",
   gradientEnd: "#85E0FA",
 };
 
 const styles = StyleSheet.create({
-  // -- Layout Containers --
   gradientBackground: {
     flex: 1,
   },
   safeArea: {
     flex: 1,
-    // Adiciona padding no topo para Android se não for 'safe'
     paddingTop: Platform.OS === "android" ? 25 : 0,
   },
-  // Container para telas de Login/Cadastro (centralizado)
   scrollContainer: {
     flexGrow: 1,
     justifyContent: "center",
     alignItems: "center",
-    paddingVertical: 60, // Espaço no topo e base
+    paddingVertical: 60, 
   },
   contentContainer: {
     width: "90%",
     alignItems: "center",
   },
   formContainer: {
-    width: "90%", // Ocupa 90% da largura da tela
+    width: "90%", 
     backgroundColor: COLORS.white,
     borderRadius: 20,
     padding: 25,
@@ -283,7 +270,6 @@ const styles = StyleSheet.create({
     elevation: 10,
   },
 
-  // -- Títulos e Textos --
   title: {
     fontSize: 28,
     fontWeight: "bold",
@@ -295,7 +281,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: COLORS.textLabel,
     marginBottom: 8,
-    alignSelf: "flex-start", // Alinha o label à esquerda
+    alignSelf: "flex-start", 
   },
   buttonText: {
     color: COLORS.white,
@@ -303,10 +289,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
 
-  // -- Inputs --
   inputGroup: {
     width: "100%",
-    marginBottom: 15, // Menos espaço entre os inputs
+    marginBottom: 15, 
   },
   input: {
     width: "100%",
@@ -320,7 +305,6 @@ const styles = StyleSheet.create({
     borderColor: "#EEE",
   },
 
-  // -- Botões e Links --
   loginButton: {
     width: "100%",
     height: 50,
@@ -340,7 +324,7 @@ const styles = StyleSheet.create({
   },
   backButton: {
     position: "absolute",
-    top: Platform.OS === "android" ? 35 : 10, // Ajuste para o padding do Android
+    top: Platform.OS === "android" ? 35 : 10, 
     left: 20,
     zIndex: 1,
   },
@@ -363,7 +347,6 @@ const styles = StyleSheet.create({
     textDecorationLine: "underline",
   },
 
-  // --- NOVOS ESTILOS PARA O SELETOR DE TIPO ---
   userTypeSelector: {
     width: "100%",
     flexDirection: "row",
@@ -373,7 +356,7 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   userTypeButton: {
-    flex: 1, // Divide o espaço igualmente
+    flex: 1, 
     paddingVertical: 10,
     borderRadius: 8,
     alignItems: "center",
@@ -397,8 +380,4 @@ const styles = StyleSheet.create({
   userTypeButtonTextInactive: {
     color: COLORS.darkGray,
   },
-
-  /* Seus estilos antigos (não usados aqui) */
-  // map: { ... },
-  // card: { ... },
 });

@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import Constants from "expo-constants";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
@@ -27,16 +28,64 @@ type Veiculo = {
 type VeiculoItem = ItemType<string>;
 
 export default function CriarViagemScreen() {
+  const ORS_API_KEY = Constants.expoConfig?.extra?.expoPublicOrsApiKey;
   const router = useRouter();
 
   const [origem, setOrigem] = useState("");
   const [destino, setDestino] = useState("");
   const [data, setData] = useState("");
-  const [hora, setHora] = useState(""); // 1. Novo estado para Hora
+  const [hora, setHora] = useState("");
 
   const [veiculo, setVeiculo] = useState<string | null>(null);
   const [veiculos, setVeiculos] = useState<VeiculoItem[]>([]);
   const [open, setOpen] = useState(false);
+
+  const [sugestoesOrigem, setSugestoesOrigem] = useState<any[]>([]);
+  const [sugestoesDestino, setSugestoesDestino] = useState<any[]>([]);
+
+  const [origemCoords, setOrigemCoords] = useState<[number, number] | null>(
+    null
+  );
+  const [destinoCoords, setDestinoCoords] = useState<[number, number] | null>(
+    null
+  );
+
+  async function buscarSugestoes(texto: string, setSugestoes: any) {
+    if (texto.length < 3) {
+      setSugestoes([]);
+      return;
+    }
+
+    try {
+      const resp = await fetch(
+        `https://api.openrouteservice.org/geocode/autocomplete?text=${encodeURIComponent(
+          texto
+        )}`,
+        {
+          headers: {
+            Authorization: ORS_API_KEY,
+            Accept: "application/json",
+          },
+        }
+      );
+
+      if (!resp.ok) {
+        console.log("Erro ORS:", await resp.text());
+        return;
+      }
+
+      const data = await resp.json();
+      const lista =
+        data?.features?.map((f: any) => ({
+          label: f.properties.label,
+          coords: f.geometry.coordinates, // [lon, lat]
+        })) ?? [];
+
+      setSugestoes(lista);
+    } catch (err) {
+      console.log("Erro ao buscar sugestões:", err);
+    }
+  }
 
   useEffect(() => {
     async function buscarVeiculos() {
@@ -74,7 +123,6 @@ export default function CriarViagemScreen() {
     buscarVeiculos();
   }, []);
 
-  // Máscara de Data (DD/MM/AAAA)
   const handleDateChange = (text: string) => {
     let numericText = text.replace(/[^\d]/g, "");
     if (numericText.length <= 2) {
@@ -92,10 +140,8 @@ export default function CriarViagemScreen() {
     }
   };
 
-  // 2. Máscara de Hora (HH:MM)
   const handleTimeChange = (text: string) => {
     let numericText = text.replace(/[^\d]/g, "");
-    // Limita a 4 dígitos
     if (numericText.length > 4) numericText = numericText.slice(0, 4);
 
     if (numericText.length <= 2) {
@@ -106,9 +152,37 @@ export default function CriarViagemScreen() {
   };
 
   const handleCriar = async () => {
-    // Validação inclui a hora agora
+    if (!origemCoords || !destinoCoords) {
+      Alert.alert(
+        "Atenção",
+        "Selecione Origem e Destino clicando em uma sugestão."
+      );
+      return;
+    }
+
     if (!origem || !destino || !data || !hora || !veiculo) {
-      Alert.alert("Atenção", "Preencha todos os campos antes de continuar.");
+      Alert.alert("Atenção", "Preencha todos os campos corretamente.");
+      return;
+    }
+
+    const [dia, mes, ano] = data.split("/");
+    const [horas, minutos] = hora.split(":");
+
+    const horarioSelecionado = new Date(
+      parseInt(ano),
+      parseInt(mes) - 1,
+      parseInt(dia),
+      parseInt(horas),
+      parseInt(minutos)
+    );
+
+    const agora = new Date();
+
+    if (horarioSelecionado < agora) {
+      Alert.alert(
+        "Atenção",
+        "Data e hora inválidas. Escolha um horário futuro."
+      );
       return;
     }
 
@@ -119,25 +193,9 @@ export default function CriarViagemScreen() {
         return;
       }
 
-      // Validação e Montagem da Data/Hora
       const [dia, mes, ano] = data.split("/");
       const [horas, minutos] = hora.split(":");
 
-      if (
-        !ano ||
-        !mes ||
-        !dia ||
-        ano.length !== 4 ||
-        data.length !== 10 ||
-        !horas ||
-        !minutos ||
-        hora.length !== 5
-      ) {
-        Alert.alert("Erro", "Data ou Hora inválidas.");
-        return;
-      }
-
-      // 3. Formata para o padrão do Banco (YYYY-MM-DDTHH:MM:SS)
       const horario_partida = `${ano}-${mes}-${dia}T${horas}:${minutos}:00`;
 
       const body = {
@@ -145,9 +203,9 @@ export default function CriarViagemScreen() {
         local_saida: origem,
         local_chegada: destino,
         placa_veiculo: veiculo,
+        origemCoords,
+        destinoCoords,
       };
-
-      console.log("Enviando:", body);
 
       const response = await fetch(`${BASE_URL}/viagens`, {
         method: "POST",
@@ -164,14 +222,15 @@ export default function CriarViagemScreen() {
         throw new Error(result.message || "Erro ao criar viagem");
 
       Alert.alert("Sucesso", "Viagem criada com sucesso!");
-      router.replace("/viagens"); // Volta para a lista
+      router.replace("/viagens");
 
-      // Limpa os campos
       setOrigem("");
       setDestino("");
       setData("");
       setHora("");
       setVeiculo(null);
+      setOrigemCoords(null);
+      setDestinoCoords(null);
     } catch (error) {
       console.error("Erro ao criar viagem:", error);
       Alert.alert("Erro", (error as Error).message || "Erro ao criar viagem.");
@@ -249,7 +308,11 @@ export default function CriarViagemScreen() {
                 </Text>
                 <TextInput
                   value={origem}
-                  onChangeText={setOrigem}
+                  onChangeText={(txt) => {
+                    setOrigem(txt);
+                    setOrigemCoords(null);
+                    buscarSugestoes(txt, setSugestoesOrigem);
+                  }}
                   placeholder="Ex: Shopping Vila Velha"
                   placeholderTextColor="#999"
                   style={{
@@ -264,6 +327,28 @@ export default function CriarViagemScreen() {
                     borderColor: "#EEE",
                   }}
                 />
+
+                {sugestoesOrigem.map((item, i) => (
+                  <TouchableOpacity
+                    key={i}
+                    onPress={() => {
+                      setOrigem(item.label);
+                      setOrigemCoords([item.coords[0], item.coords[1]]);
+                      setSugestoesOrigem([]);
+                    }}
+                    style={{
+                      paddingVertical: 10,
+                      paddingHorizontal: 12,
+                      backgroundColor: "#eee",
+                      borderBottomWidth: 1,
+                      borderColor: "#ccc",
+                      borderRadius: 8,
+                      marginTop: 5,
+                    }}
+                  >
+                    <Text style={{ color: "#333" }}>{item.label}</Text>
+                  </TouchableOpacity>
+                ))}
               </View>
 
               {/* DESTINO */}
@@ -280,7 +365,11 @@ export default function CriarViagemScreen() {
                 </Text>
                 <TextInput
                   value={destino}
-                  onChangeText={setDestino}
+                  onChangeText={(txt) => {
+                    setDestino(txt);
+                    setDestinoCoords(null); // reset coords ao digitar
+                    buscarSugestoes(txt, setSugestoesDestino);
+                  }}
                   placeholder="Ex: Universidade UVV"
                   placeholderTextColor="#999"
                   style={{
@@ -295,29 +384,34 @@ export default function CriarViagemScreen() {
                     borderColor: "#EEE",
                   }}
                 />
-              </View>
 
-              {/* LINHA: DATA E HORA LADO A LADO */}
-              <View
-                style={{
-                  flexDirection: "row",
-                  justifyContent: "space-between",
-                  width: "100%",
-                  marginBottom: 15,
-                }}
-              >
-                {/* DATA */}
-                <View style={{ width: "48%" }}>
-                  <Text
+                {sugestoesDestino.map((item, i) => (
+                  <TouchableOpacity
+                    key={i}
+                    onPress={() => {
+                      setDestino(item.label);
+                      setDestinoCoords([item.coords[0], item.coords[1]]);
+                      setSugestoesDestino([]);
+                    }}
                     style={{
-                      fontSize: 14,
-                      fontWeight: "600",
-                      color: "#555",
-                      marginBottom: 8,
+                      paddingVertical: 10,
+                      paddingHorizontal: 12,
+                      backgroundColor: "#eee",
+                      borderBottomWidth: 1,
+                      borderColor: "#ccc",
+                      borderRadius: 8,
+                      marginTop: 5,
                     }}
                   >
-                    Data
-                  </Text>
+                    <Text style={{ color: "#333" }}>{item.label}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              {/* DATA, HORA e VEÍCULO */}
+              <View style={{ flexDirection: "row", justifyContent: "space-between", width: "100%", marginBottom: 15 }}>
+                <View style={{ width: "48%" }}>
+                  <Text style={{ fontSize: 14, fontWeight: "600", color: "#555", marginBottom: 8 }}>Data</Text>
                   <TextInput
                     value={data}
                     onChangeText={handleDateChange}
@@ -325,33 +419,12 @@ export default function CriarViagemScreen() {
                     placeholderTextColor="#999"
                     maxLength={10}
                     keyboardType="numeric"
-                    style={{
-                      width: "100%",
-                      height: 50,
-                      backgroundColor: "#F7F8FA",
-                      borderRadius: 10,
-                      paddingHorizontal: 15,
-                      fontSize: 16,
-                      color: "#333",
-                      borderWidth: 1,
-                      borderColor: "#EEE",
-                      textAlign: "center",
-                    }}
+                    style={{ width: "100%", height: 50, backgroundColor: "#F7F8FA", borderRadius: 10, paddingHorizontal: 15, fontSize: 16, color: "#333", borderWidth: 1, borderColor: "#EEE", textAlign: "center" }}
                   />
                 </View>
 
-                {/* HORA */}
                 <View style={{ width: "48%" }}>
-                  <Text
-                    style={{
-                      fontSize: 14,
-                      fontWeight: "600",
-                      color: "#555",
-                      marginBottom: 8,
-                    }}
-                  >
-                    Hora
-                  </Text>
+                  <Text style={{ fontSize: 14, fontWeight: "600", color: "#555", marginBottom: 8 }}>Hora</Text>
                   <TextInput
                     value={hora}
                     onChangeText={handleTimeChange}
@@ -359,34 +432,13 @@ export default function CriarViagemScreen() {
                     placeholderTextColor="#999"
                     maxLength={5}
                     keyboardType="numeric"
-                    style={{
-                      width: "100%",
-                      height: 50,
-                      backgroundColor: "#F7F8FA",
-                      borderRadius: 10,
-                      paddingHorizontal: 15,
-                      fontSize: 16,
-                      color: "#333",
-                      borderWidth: 1,
-                      borderColor: "#EEE",
-                      textAlign: "center",
-                    }}
+                    style={{ width: "100%", height: 50, backgroundColor: "#F7F8FA", borderRadius: 10, paddingHorizontal: 15, fontSize: 16, color: "#333", borderWidth: 1, borderColor: "#EEE", textAlign: "center" }}
                   />
                 </View>
               </View>
 
-              {/* VEÍCULO */}
               <View style={{ width: "100%", marginBottom: 15, zIndex: 1000 }}>
-                <Text
-                  style={{
-                    fontSize: 14,
-                    fontWeight: "600",
-                    color: "#555",
-                    marginBottom: 8,
-                  }}
-                >
-                  Veículo
-                </Text>
+                <Text style={{ fontSize: 14, fontWeight: "600", color: "#555", marginBottom: 8 }}>Veículo</Text>
                 <DropDownPicker
                   open={open}
                   value={veiculo}
@@ -395,19 +447,9 @@ export default function CriarViagemScreen() {
                   setValue={setVeiculo}
                   setItems={setVeiculos}
                   placeholder="Selecione o veículo"
-                  style={{
-                    width: "100%",
-                    height: 50,
-                    backgroundColor: "#F7F8FA",
-                    borderRadius: 10,
-                    borderWidth: 1,
-                    borderColor: "#EEE",
-                  }}
-                  dropDownContainerStyle={{
-                    width: "100%",
-                    backgroundColor: "#F7F8FA",
-                    borderColor: "#EEE",
-                  }}
+                  listMode="SCROLLVIEW"
+                  style={{ width: "100%", height: 50, backgroundColor: "#F7F8FA", borderRadius: 10, borderWidth: 1, borderColor: "#EEE" }}
+                  dropDownContainerStyle={{ width: "100%", backgroundColor: "#F7F8FA", borderColor: "#EEE" }}
                   textStyle={{ fontSize: 16, color: "#333" }}
                   placeholderStyle={{ color: "#999", fontSize: 16 }}
                 />
@@ -415,28 +457,10 @@ export default function CriarViagemScreen() {
 
               {/* BOTÃO */}
               <TouchableOpacity
-                style={{
-                  width: "100%",
-                  height: 50,
-                  backgroundColor: "#1F7AF3",
-                  borderRadius: 10,
-                  justifyContent: "center",
-                  alignItems: "center",
-                  marginTop: 10,
-                  shadowColor: "#1F7AF3",
-                  shadowOffset: { width: 0, height: 3 },
-                  shadowOpacity: 0.3,
-                  shadowRadius: 5,
-                  elevation: 6,
-                  zIndex: 0,
-                }}
+                style={{ width: "100%", height: 50, backgroundColor: "#1F7AF3", borderRadius: 10, justifyContent: "center", alignItems: "center", marginTop: 10, shadowColor: "#1F7AF3", shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.3, shadowRadius: 5, elevation: 6 }}
                 onPress={handleCriar}
               >
-                <Text
-                  style={{ color: "#FFFFFF", fontWeight: "bold", fontSize: 16 }}
-                >
-                  Agendar Viagem
-                </Text>
+                <Text style={{ color: "#FFFFFF", fontWeight: "bold", fontSize: 16 }}>Agendar Viagem</Text>
               </TouchableOpacity>
             </View>
           </ScrollView>

@@ -3,7 +3,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
 import { Alert, Platform, TouchableOpacity } from "react-native";
 
-export const BASE_URL = "http://10.5.10.155:3000";
+export const BASE_URL = 'http://192.168.100.10:3000';
 // const BASE_URL = 'http://172.20.10.4:3000'; //laila
 // const BASE_URL = 'http://10.5.10.155:3000'; //gianluca
 
@@ -21,7 +21,7 @@ export default function BotaoVoltar() {
 }
 
 async function validarCampos(dados = {}) {
-  if (typeof dados !== "object" || dados === null) {
+  if (typeof dados !== "object" || dados === null) {io
     throw new Error("Dados inválidos para validação.");
   }
 
@@ -178,20 +178,19 @@ export async function login({ email, senha, router }) {
       await AsyncStorage.setItem("token", data.token);
       await AsyncStorage.setItem("tipo", data.tipo);
       await AsyncStorage.setItem("user", JSON.stringify(data.user));
-      console.log("data", data);
 
       if (Platform.OS === "web") {
         alert("Sucesso! Login realizado.");
       } else {
-        // Alert.alert("Sucesso", "Login realizado!");
-      } // --- CORREÇÃO PRINCIPAL --- // Use router.replace() em vez de router.push() // Isso impede que o usuário aperte "Voltar" e retorne para a tela de Login.
+        Alert.alert("Sucesso", "Login realizado!");
+      }
 
       if (data.tipo === "motorista") {
         router.replace("/homeMotorista");
       } else if (data.tipo === "passageiro") {
-        router.replace("/homePassageiro"); // Lembre-se: o arquivo 'app/solicitarViagem.tsx' precisa existir
+        router.replace("/homePassageiro");
       } else {
-        router.replace("/"); // Rota padrão (ex: tela inicial)
+        router.replace("/");
       }
     } else {
       const message = data.message || "E-mail ou senha inválidos.";
@@ -202,8 +201,6 @@ export async function login({ email, senha, router }) {
       }
     }
   } catch (error) {
-    // --- CORREÇÃO DE ERRO DE REDE ---
-    // Esta mensagem de erro personalizada ajuda a identificar o problema de 'localhost'
     let message = error instanceof Error ? error.message : String(error);
     console.log("message", message);
 
@@ -271,18 +268,17 @@ export async function cadastrarVeiculo({
 
     if (response.ok) {
       Alert.alert("Veículo cadastrado com sucesso!");
-      // router.push("/veiculos");
+      router.push("/veiculos");
     } else {
       Alert.alert(data.message || "Erro ao cadastrar veículo");
     }
-    // router.push("/veiculos");
   } catch (error) {
     console.error(error);
     alert("Erro de rede ao cadastrar veículo");
   }
 }
 
-export async function excluirVeiculo(id, setVeiculos) {
+export async function excluirVeiculo(placa, setVeiculos) {
   try {
     const token = await AsyncStorage.getItem("token");
     if (!token) {
@@ -292,10 +288,10 @@ export async function excluirVeiculo(id, setVeiculos) {
       return;
     }
 
-    console.log("[DELETE] URL:", `${BASE_URL}/veiculo/${id}`);
+    console.log("[DELETE] URL:", `${BASE_URL}/deleteVeiculo/${placa}`);
     console.log("[DELETE] Token:", token);
 
-    const response = await fetch(`${BASE_URL}/veiculo/${id}`, {
+    const response = await fetch(`${BASE_URL}/deleteVeiculo/${placa}`, {
       method: "DELETE",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -305,7 +301,6 @@ export async function excluirVeiculo(id, setVeiculos) {
 
     console.log("[DELETE] status:", response.status, "ok:", response.ok);
 
-    // tenta ler body (pode ser texto ou json)
     let text;
     try {
       text = await response.text();
@@ -314,29 +309,55 @@ export async function excluirVeiculo(id, setVeiculos) {
       console.log("[DELETE] não conseguiu ler body:", e);
     }
 
-    // se backend retornar JSON com mensagem de erro, tenta parsear
     try {
       const maybeJson = JSON.parse(text || "{}");
       console.log("[DELETE] body json:", maybeJson);
     } catch (_) {
-      /* ignora */
     }
 
-    // tratar códigos esperados:
     if (response.ok) {
-      // se 200/204 etc
-      setVeiculos((prev) => prev.filter((v) => v.id_veiculo !== id));
+      setVeiculos((prev) => prev.filter((v) => v.placa !== placa));
       if (Platform.OS === "web") alert("Veículo excluído com sucesso!");
       else Alert.alert("Sucesso", "Veículo excluído com sucesso!");
       return;
     }
 
-    // se não ok, joga um erro com info
     throw new Error(`DELETE falhou: status ${response.status} - ${text}`);
   } catch (err) {
     console.error("Erro ao excluir veículo:", err);
     if (Platform.OS === "web") alert(`Erro ao excluir veículo: ${err.message}`);
     else
       Alert.alert("Erro", err.message || "Não foi possível excluir o veículo.");
+  }
+}
+
+export async function excluirViagem(id_viagem, setViagens) {
+  try {
+    const token = await AsyncStorage.getItem("token");
+    if (!token) {
+      Alert.alert("Erro", "Usuário não autenticado");
+      return;
+    }
+
+    const response = await fetch(`${BASE_URL}/deleteViagem/${id_viagem}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      console.log("Erro DELETE:", response.status, data);
+      throw new Error(data.message || `Erro ao excluir viagem (${response.status})`);
+    }
+
+
+    setViagens(prev => prev.filter(v => v.id_viagem !== id_viagem));
+    Alert.alert("Sucesso", "Viagem cancelada com sucesso!");
+  } catch (err) {
+    console.error("Erro ao excluir viagem:", err);
+    Alert.alert("Erro", err.message || "Não foi possível excluir a viagem.");
   }
 }

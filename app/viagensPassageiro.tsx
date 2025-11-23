@@ -14,11 +14,11 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { BASE_URL } from "./script"; // Verifique o caminho
+import { BASE_URL } from "./script";
 
 type ViagemPassageiro = {
   id_viagem: number;
-  id_checkin: number; // Importante para cancelar
+  id_checkin: number; 
   local_saida: string;
   local_chegada: string;
   horario_partida: string;
@@ -27,6 +27,7 @@ type ViagemPassageiro = {
   valor_total: number;
   placa_veiculo: string;
   modelo: string;
+  status: string; // ✅ Adicione o status
 };
 
 export default function ViagensPassageiroScreen() {
@@ -34,7 +35,6 @@ export default function ViagensPassageiroScreen() {
   const [viagens, setViagens] = useState<ViagemPassageiro[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Função para buscar as viagens
   const carregarViagens = async () => {
     try {
       const token = await AsyncStorage.getItem("token");
@@ -43,12 +43,8 @@ export default function ViagensPassageiroScreen() {
         router.replace("/login");
         return;
       }
-
-      // Usa a rota GET /checkin que retorna as viagens do passageiro
-      const response = await fetch(`${BASE_URL}/checkin`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      const response = await fetch(`${BASE_URL}/getCheckin`, {
+        headers: { Authorization: `Bearer ${token}` },
       });
 
       const data = await response.json();
@@ -70,7 +66,6 @@ export default function ViagensPassageiroScreen() {
     carregarViagens();
   }, []);
 
-  // Função para cancelar Check-in
   const handleCancelarCheckin = async (id_checkin: number) => {
     Alert.alert(
       "Cancelar Viagem",
@@ -83,22 +78,30 @@ export default function ViagensPassageiroScreen() {
           onPress: async () => {
             try {
               const token = await AsyncStorage.getItem("token");
-              // Rota de cancelamento (ajuste conforme seu backend: /checkin/:id/cancelar)
+              if (!token) return;
+
               const response = await fetch(
-                `${BASE_URL}/checkin/${id_checkin}/cancelar`,
+                `${BASE_URL}/deletarCheckin/check-in/${id_checkin}/cancelar`,
                 {
-                  method: "PATCH", // ou DELETE, dependendo do seu backend
-                  headers: {
-                    Authorization: `Bearer ${token}`,
-                  },
+                  method: "PATCH",
+                  headers: { Authorization: `Bearer ${token}` },
                 }
               );
 
+              const data = await response.json();
+
               if (response.ok) {
-                Alert.alert("Sucesso", "Reserva cancelada.");
-                carregarViagens(); // Recarrega a lista
+                // Atualiza apenas o item cancelado na lista
+                setViagens((prev) =>
+                  prev.map((v) =>
+                    v.id_checkin === id_checkin
+                      ? { ...v, status: "cancelado" }
+                      : v
+                  )
+                );
+                Alert.alert("Sucesso", data.message || "Reserva cancelada.");
               } else {
-                Alert.alert("Erro", "Não foi possível cancelar.");
+                Alert.alert("Erro", data.message || "Não foi possível cancelar.");
               }
             } catch (error) {
               Alert.alert("Erro", "Falha na conexão.");
@@ -115,7 +118,7 @@ export default function ViagensPassageiroScreen() {
     return data.toLocaleString("pt-BR", {
       day: "2-digit",
       month: "2-digit",
-      year: "2-digit", // Ano com 2 dígitos para economizar espaço
+      year: "2-digit", 
       hour: "2-digit",
       minute: "2-digit",
     });
@@ -124,9 +127,7 @@ export default function ViagensPassageiroScreen() {
   if (loading) {
     return (
       <LinearGradient colors={["#1974F3", "#85E0FA"]} style={{ flex: 1 }}>
-        <View
-          style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
-        >
+        <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
           <ActivityIndicator size="large" color="#FFFFFF" />
         </View>
       </LinearGradient>
@@ -153,7 +154,6 @@ export default function ViagensPassageiroScreen() {
           <Ionicons name="arrow-back-circle" size={40} color="white" />
         </TouchableOpacity>
 
-        {/* Container Principal */}
         <View
           style={{
             flexGrow: 1,
@@ -192,14 +192,7 @@ export default function ViagensPassageiroScreen() {
             {viagens.length === 0 ? (
               <View style={{ alignItems: "center", marginVertical: 30 }}>
                 <Ionicons name="car-sport-outline" size={60} color="#ccc" />
-                <Text
-                  style={{
-                    color: "#555",
-                    marginTop: 10,
-                    textAlign: "center",
-                    fontSize: 16,
-                  }}
-                >
+                <Text style={{ color: "#555", marginTop: 10, textAlign: "center", fontSize: 16 }}>
                   Você ainda não tem corridas agendadas.
                 </Text>
               </View>
@@ -218,125 +211,46 @@ export default function ViagensPassageiroScreen() {
                       borderRadius: 12,
                       marginBottom: 15,
                       borderLeftWidth: 5,
-                      borderLeftColor: "#1974F3", // Detalhe azul na esquerda
+                      borderLeftColor: "#1974F3", 
                     }}
                   >
-                    {/* Cabeçalho do Card: Carro e Placa */}
-                    <View
-                      style={{
-                        flexDirection: "row",
-                        justifyContent: "space-between",
-                        marginBottom: 8,
-                      }}
-                    >
-                      <Text
-                        style={{
-                          fontSize: 16,
-                          fontWeight: "bold",
-                          color: "#333",
-                        }}
-                      >
-                        {item.modelo}
-                      </Text>
-                      <Text
-                        style={{
-                          fontSize: 14,
-                          color: "#666",
-                          fontWeight: "600",
-                        }}
-                      >
-                        {item.placa_veiculo}
-                      </Text>
+                    {/* Cabeçalho: Carro e Placa */}
+                    <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 8 }}>
+                      <Text style={{ fontSize: 16, fontWeight: "bold", color: "#333" }}>{item.modelo}</Text>
+                      <Text style={{ fontSize: 14, color: "#666", fontWeight: "600" }}>{item.placa_veiculo}</Text>
                     </View>
 
                     {/* Rota */}
                     <View style={{ marginBottom: 10 }}>
-                      <View
-                        style={{
-                          flexDirection: "row",
-                          alignItems: "center",
-                          marginBottom: 4,
-                        }}
-                      >
-                        <Ionicons
-                          name="ellipse-outline"
-                          size={12}
-                          color="#1974F3"
-                          style={{ marginRight: 6 }}
-                        />
-                        <Text
-                          style={{ fontSize: 14, color: "#555" }}
-                          numberOfLines={1}
-                        >
+                      <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 4 }}>
+                        <Ionicons name="ellipse-outline" size={12} color="#1974F3" style={{ marginRight: 6 }} />
+                        <Text style={{ fontSize: 14, color: "#555" }} numberOfLines={1}>
                           De: {item.local_saida}
                         </Text>
                       </View>
-                      <View
-                        style={{ flexDirection: "row", alignItems: "center" }}
-                      >
-                        <Ionicons
-                          name="location"
-                          size={12}
-                          color="#E11D48"
-                          style={{ marginRight: 6 }}
-                        />
-                        <Text
-                          style={{
-                            fontSize: 14,
-                            color: "#333",
-                            fontWeight: "500",
-                          }}
-                          numberOfLines={1}
-                        >
+                      <View style={{ flexDirection: "row", alignItems: "center" }}>
+                        <Ionicons name="location" size={12} color="#E11D48" style={{ marginRight: 6 }} />
+                        <Text style={{ fontSize: 14, color: "#333", fontWeight: "500" }} numberOfLines={1}>
                           Para: {item.local_chegada}
                         </Text>
                       </View>
                     </View>
 
-                    {/* Data e Valor */}
-                    <View
-                      style={{
-                        flexDirection: "row",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        marginTop: 5,
-                        borderTopWidth: 1,
-                        borderTopColor: "#EEE",
-                        paddingTop: 10,
-                      }}
-                    >
+                    {/* Data, Valor e Status */}
+                    <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 5, borderTopWidth: 1, borderTopColor: "#EEE", paddingTop: 10 }}>
                       <View>
-                        <Text style={{ fontSize: 12, color: "#888" }}>
-                          Data e Hora
-                        </Text>
-                        <Text
-                          style={{
-                            fontSize: 14,
-                            color: "#333",
-                            fontWeight: "600",
-                          }}
-                        >
+                        <Text style={{ fontSize: 12, color: "#888" }}>Data e Hora</Text>
+                        <Text style={{ fontSize: 14, color: "#333", fontWeight: "600" }}>
                           {formatarData(item.horario_partida)}
                         </Text>
                       </View>
-                      <View>
-                        <Text
-                          style={{
-                            fontSize: 12,
-                            color: "#888",
-                            textAlign: "right",
-                          }}
-                        >
-                          Valor
-                        </Text>
-                        <Text
-                          style={{
-                            fontSize: 16,
-                            color: "#1974F3",
-                            fontWeight: "bold",
-                          }}
-                        >
+                      <View style={{ alignItems: "flex-end" }}>
+                        <Text style={{ fontSize: 12, color: "#888" }}>Valor</Text>
+                        <Text style={{ fontSize: 16, color: "#1974F3", fontWeight: "bold" }}>
                           R$ {item.valor_total?.toFixed(2)}
+                        </Text>
+                        <Text style={{ fontSize: 12, color: item.status === "cancelado" ? "#D94343" : "#1974F3", fontWeight: "600" }}>
+                          {item.status === "cancelado" ? "Cancelado" : "Confirmado"}
                         </Text>
                       </View>
                     </View>
@@ -344,17 +258,18 @@ export default function ViagensPassageiroScreen() {
                     {/* Botão de Cancelar */}
                     <TouchableOpacity
                       onPress={() => handleCancelarCheckin(item.id_checkin)}
+                      disabled={item.status === "cancelado"}
                       style={{
                         marginTop: 15,
-                        backgroundColor: "#fff0f0",
+                        backgroundColor: item.status === "cancelado" ? "#f0f0f0" : "#fff0f0",
                         paddingVertical: 10,
                         borderRadius: 8,
                         alignItems: "center",
                         borderWidth: 1,
-                        borderColor: "#ffcccc",
+                        borderColor: item.status === "cancelado" ? "#ccc" : "#ffcccc",
                       }}
                     >
-                      <Text style={{ color: "#D94343", fontWeight: "600" }}>
+                      <Text style={{ color: item.status === "cancelado" ? "#888" : "#D94343", fontWeight: "600" }}>
                         Cancelar Reserva
                       </Text>
                     </TouchableOpacity>

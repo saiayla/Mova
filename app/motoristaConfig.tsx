@@ -1,18 +1,16 @@
 import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
   Alert,
-  Platform, // Adicionado para os estilos
+  Platform,
   StatusBar,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
-// Removida a importação de 'globalStyles'
-// import { globalStyles as styles } from '../style';
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function PerfilMotoristaScreen() {
@@ -39,10 +37,7 @@ export default function PerfilMotoristaScreen() {
     fetchData();
   }, []);
 
-  // Função de logout (exemplo)
   const handleLogout = () => {
-    // Lógica de limpar AsyncStorage (importante!)
-    // Lembre-se de importar o AsyncStorage
     // await AsyncStorage.clear();
     router.replace("/telaInicial");
   };
@@ -50,13 +45,13 @@ export default function PerfilMotoristaScreen() {
   return (
     <LinearGradient
       colors={["#1974F3", "#85E0FA"]}
-      style={{ flex: 1 }} // style={styles.gradientBackground}
+      style={{ flex: 1 }}
     >
       <SafeAreaView
         style={{
           flex: 1,
           paddingTop: Platform.OS === "android" ? 25 : 0,
-        }} // style={styles.safeArea}
+        }}
       >
         <StatusBar barStyle="light-content" />
 
@@ -67,7 +62,7 @@ export default function PerfilMotoristaScreen() {
             top: Platform.OS === "android" ? 35 : 10,
             left: 20,
             zIndex: 1,
-          }} // style={styles.backButton}
+          }}
         >
           <Ionicons name="arrow-back-circle" size={40} color="white" />
         </TouchableOpacity>
@@ -79,7 +74,7 @@ export default function PerfilMotoristaScreen() {
             alignItems: "center",
             paddingVertical: 60,
             paddingHorizontal: "5%",
-          }} // style={styles.scrollContainer}
+          }}
         >
           <View
             style={{
@@ -96,12 +91,12 @@ export default function PerfilMotoristaScreen() {
               shadowOpacity: 0.15,
               shadowRadius: 10,
               elevation: 10,
-            }} // style={styles.formContainer}
+            }}
           >
             <Ionicons
               name="person-circle"
               size={80}
-              color={"#1F7AF3"} // styles.dashboardButtonIcon.color
+              color={"#1F7AF3"}
               style={{ marginBottom: 10 }}
             />
             <Text
@@ -110,7 +105,7 @@ export default function PerfilMotoristaScreen() {
                 fontWeight: "bold",
                 color: "#333",
                 marginBottom: 10,
-              }} // style={styles.dashboardTitle}
+              }}
             >
               {dados?.nome}
             </Text>
@@ -120,7 +115,7 @@ export default function PerfilMotoristaScreen() {
                 color: "#555",
                 textAlign: "center",
                 marginBottom: 30,
-              }} // style={[styles.dashboardSubtitle, { marginBottom: 30 }]}
+              }}
             >
               {dados?.email}
             </Text>
@@ -213,16 +208,13 @@ export default function PerfilMotoristaScreen() {
                 paddingVertical: 18,
                 borderRadius: 10,
                 marginBottom: 15,
-              }} // style={styles.dashboardButton}
-              onPress={() => Alert.alert("WIP", "Tela de Pagamentos")}
+              }}
+              onPress={() => router.push("/saldoMotorista")}
             >
               <Ionicons
                 name="wallet-outline"
                 size={24}
-                style={{
-                  marginRight: 15,
-                  color: "#1F7AF3",
-                }} // style={styles.dashboardButtonIcon}
+                style={{ marginRight: 15, color: "#1F7AF3" }}
               />
               <Text
                 style={{
@@ -230,16 +222,17 @@ export default function PerfilMotoristaScreen() {
                   fontSize: 16,
                   fontWeight: "600",
                   color: "#333",
-                }} // style={styles.dashboardButtonText}
+                }}
               >
                 Pagamentos e Saldo
               </Text>
               <Ionicons
                 name="chevron-forward-outline"
                 size={20}
-                style={{ color: "#999" }} // style={styles.dashboardButtonChevron}
+                style={{ color: "#999" }}
               />
             </TouchableOpacity>
+
 
             <TouchableOpacity
               style={{
@@ -251,7 +244,7 @@ export default function PerfilMotoristaScreen() {
                 paddingVertical: 18,
                 borderRadius: 10,
                 marginBottom: 15,
-              }} // style={styles.dashboardButton}
+              }}
               onPress={() => router.push("/viagens")}
             >
               <Ionicons
@@ -260,7 +253,7 @@ export default function PerfilMotoristaScreen() {
                 style={{
                   marginRight: 15,
                   color: "#1F7AF3",
-                }} // style={styles.dashboardButtonIcon}
+                }}
               />
               <Text
                 style={{
@@ -268,14 +261,14 @@ export default function PerfilMotoristaScreen() {
                   fontSize: 16,
                   fontWeight: "600",
                   color: "#333",
-                }} // style={styles.dashboardButtonText}
+                }}
               >
                 Corridas
               </Text>
               <Ionicons
                 name="chevron-forward-outline"
                 size={20}
-                style={{ color: "#999" }} // style={styles.dashboardButtonChevron}
+                style={{ color: "#999" }}
               />
             </TouchableOpacity>
 
@@ -289,10 +282,9 @@ export default function PerfilMotoristaScreen() {
                 paddingVertical: 18,
                 borderRadius: 10,
                 marginBottom: 15,
-                // Overrides:
                 marginTop: 20,
                 backgroundColor: "#fbeeee",
-              }} // style={[styles.dashboardButton, { marginTop: 20, backgroundColor: '#fbeeee' }]}
+              }}
               onPress={handleLogout}
             >
               <Ionicons
@@ -300,18 +292,16 @@ export default function PerfilMotoristaScreen() {
                 size={24}
                 style={{
                   marginRight: 15,
-                  // Override:
                   color: "#D94343",
-                }} // style={[styles.dashboardButtonIcon, { color: '#D94343' }]}
+                }}
               />
               <Text
                 style={{
                   flex: 1,
                   fontSize: 16,
                   fontWeight: "600",
-                  // Override:
                   color: "#D94343",
-                }} // style={[styles.dashboardButtonText, { color: '#D94343' }]}
+                }}
               >
                 Sair
               </Text>

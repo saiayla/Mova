@@ -48,11 +48,10 @@ export default function RootLayout() {
         <Stack.Screen name="homePassageiro" options={{ headerShown: false }} />
         <Stack.Screen name="cadastro" options={{ headerShown: false }} />
         <Stack.Screen name="registroVeiculo" options={{ headerShown: false }} />
-        <Stack.Screen name="solicitarViagem" options={{ headerShown: false }} />
         <Stack.Screen name="criarViagem" options={{ headerShown: false }} />
         <Stack.Screen name="veiculos" options={{ headerShown: false }} />
-        <Stack.Screen name="perfilMotorista" options={{ headerShown: false }} />
         <Stack.Screen name="viagens" options={{ headerShown: false }} />
+        <Stack.Screen name="saldoMotorista" options={{ headerShown: false }} />
       </Stack>
       <StatusBar style="auto" />
     </ThemeProvider>

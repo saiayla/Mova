@@ -39,15 +39,11 @@ export default function HomePassageiro() {
   const router = useRouter();
 
   const [region, setRegion] = useState<Region | undefined>(undefined);
-
-  // REMOVIDO: const [partida, setPartida] ... (Não é mais necessário para a busca)
-  const [destino, setDestino] = useState(""); // Inicia vazio para o usuário digitar
-
+  const [destino, setDestino] = useState("");
   const [loading, setLoading] = useState(false);
   const [vans, setVans] = useState<Viagem[]>([]);
 
   const handleBuscarViagens = async () => {
-    // 1. Validação: Verifica apenas o destino
     if (!destino) {
       Alert.alert("Atenção", "Por favor, informe para onde você quer ir.");
       return;
@@ -63,7 +59,7 @@ export default function HomePassageiro() {
         return;
       }
 
-      const response = await fetch(`${BASE_URL}/viagens/todas`, {
+      const response = await fetch(`${BASE_URL}/todasViagens`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -77,14 +73,10 @@ export default function HomePassageiro() {
       }
 
       const todasViagens: Viagem[] = await response.json();
-
-      // 2. Filtro: Compara apenas o Destino (local_chegada)
       const destinoLower = destino.toLowerCase();
 
       const viagensFiltradas = todasViagens.filter((viagem) => {
         const localChegadaLower = viagem.local_chegada.toLowerCase();
-
-        // Verifica se o destino digitado está contido no local de chegada da viagem
         return localChegadaLower.includes(destinoLower);
       });
 
@@ -112,7 +104,6 @@ export default function HomePassageiro() {
     }
   };
 
-  // Efeito para buscar a localização do usuário (Mantido para o Mapa)
   useEffect(() => {
     (async () => {
       let { status } = await Location.requestForegroundPermissionsAsync();
@@ -177,14 +168,12 @@ export default function HomePassageiro() {
             <Text style={styles.title}>Para onde vamos?</Text>
 
             <View style={styles.locationInputContainer}>
-              {/* REMOVIDO O INPUT DE PARTIDA E A LINHA PONTILHADA */}
-
               {/* Input Único de Destino */}
               <View style={styles.inputRow}>
                 <Ionicons
-                  name="search" // Mudei o ícone para lupa para indicar busca
+                  name="search"
                   size={22}
-                  color="#1974F3" // Azul destaque
+                  color="#1974F3"
                   style={styles.icon}
                 />
                 <TextInput
@@ -246,7 +235,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 5,
     elevation: 10,
-    flex: 1, // Garante que o fundo branco vá até o fim da tela
+    flex: 1,
   },
   title: {
     fontSize: 22,
@@ -263,7 +252,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#f4f4f4",
     borderRadius: 12,
     paddingHorizontal: 15,
-    paddingVertical: 15, // Aumentei um pouco para ficar mais confortável
+    paddingVertical: 15,
     marginBottom: 10,
     borderWidth: 1,
     borderColor: "#eee",
@@ -277,17 +266,11 @@ const styles = StyleSheet.create({
     color: "#333",
   },
   searchButton: {
-    backgroundColor: "#1974F3", // Azul mais vibrante
+    backgroundColor: "#1974F3",
     padding: 16,
     borderRadius: 12,
     alignItems: "center",
     marginBottom: 20,
-    // marginTop: 10,
-    // shadowColor: "#1974F3",
-    // shadowOffset: { width: 0, height: 4 },
-    // shadowOpacity: 0.3,
-    // shadowRadius: 5,
-    // elevation: 5,
   },
   searchButtonText: {
     color: "white",

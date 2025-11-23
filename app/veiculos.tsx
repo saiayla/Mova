@@ -14,11 +14,8 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-
-// Importa a função do script (assumindo que está um nível acima, na raiz)
 import { BASE_URL, excluirVeiculo } from "./script";
 
-// Define o tipo do Veículo
 type Veiculo = {
   id_veiculo: number;
   placa: string;
@@ -33,17 +30,13 @@ export default function VeiculosScreen() {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  // ATENÇÃO: 'localhost' não funciona em emuladores/dispositivos.
-  // Use 10.0.2.2 para o emulador Android ou o IP da sua máquina.
-  //   const BASE_URL = "http://10.0.2.2:3000";
-
   useEffect(() => {
     async function fetchVeiculos() {
       try {
         const token = await AsyncStorage.getItem("token");
         if (!token) {
           Alert.alert("Erro", "Usuário não autenticado.");
-          router.replace("/login"); // Use replace para login
+          router.replace("/login");
           return;
         }
 
@@ -56,7 +49,7 @@ export default function VeiculosScreen() {
         });
 
         if (!response.ok) {
-          const msg = await response.json(); // Tente .json() primeiro
+          const msg = await response.json(); 
           throw new Error(msg.message || "Erro ao buscar veículos");
         }
 
@@ -74,10 +67,9 @@ export default function VeiculosScreen() {
     }
 
     fetchVeiculos();
-  }, []); // O array vazio [] garante que rode uma vez
+  }, []); 
 
-  // Função corrigida para confirmar e atualizar o estado
-  const handleExcluir = async (id: number) => {
+  const handleExcluir = async (placa: string) => {
     Alert.alert(
       "Excluir Veículo",
       "Tem certeza que quer excluir este veículo?",
@@ -87,20 +79,18 @@ export default function VeiculosScreen() {
           text: "Excluir",
           style: "destructive",
           onPress: async () => {
-            // Passa o setVeiculos para o script poder atualizar a lista
-            await excluirVeiculo(id, setVeiculos);
+            await excluirVeiculo(placa, setVeiculos);
           },
         },
       ]
     );
   };
 
-  // Tela de Loading
   if (loading) {
     return (
       <LinearGradient
         colors={["#1974F3", "#85E0FA"]}
-        style={{ flex: 1 }} // style={styles.gradientBackground}
+        style={{ flex: 1 }} 
       >
         <SafeAreaView
           style={{
@@ -108,7 +98,7 @@ export default function VeiculosScreen() {
             justifyContent: "center",
             alignItems: "center",
             paddingTop: Platform.OS === "android" ? 25 : 0,
-          }} // style={styles.safeArea + loading}
+          }} 
         >
           <ActivityIndicator size="large" color="#FFFFFF" />
         </SafeAreaView>
@@ -116,17 +106,16 @@ export default function VeiculosScreen() {
     );
   }
 
-  // Tela Principal
   return (
     <LinearGradient
       colors={["#1974F3", "#85E0FA"]}
-      style={{ flex: 1 }} // style={styles.gradientBackground}
+      style={{ flex: 1 }} 
     >
       <SafeAreaView
         style={{
           flex: 1,
           paddingTop: Platform.OS === "android" ? 25 : 0,
-        }} // style={styles.safeArea}
+        }} 
       >
         <StatusBar barStyle="light-content" />
 
@@ -138,7 +127,7 @@ export default function VeiculosScreen() {
             top: Platform.OS === "android" ? 35 : 10,
             left: 20,
             zIndex: 1,
-          }} // style={styles.backButton}
+          }}
         >
           <Ionicons name="arrow-back-circle" size={40} color="white" />
         </TouchableOpacity>
@@ -150,7 +139,7 @@ export default function VeiculosScreen() {
             justifyContent: "center",
             alignItems: "center",
             paddingVertical: 60,
-          }} // style={styles.scrollContainer}
+          }} 
         >
           {/* Card Branco */}
           <View
@@ -165,7 +154,7 @@ export default function VeiculosScreen() {
               shadowOpacity: 0.15,
               shadowRadius: 10,
               elevation: 10,
-            }} // style={styles.formContainer}
+            }} 
           >
             {/* Título */}
             <Text
@@ -174,7 +163,7 @@ export default function VeiculosScreen() {
                 fontWeight: "bold",
                 color: "#333",
                 marginBottom: 25,
-              }} // style={styles.dashboardTitle}
+              }} 
             >
               Meus Veículos
             </Text>
@@ -185,8 +174,8 @@ export default function VeiculosScreen() {
                   fontSize: 16,
                   color: "#555",
                   textAlign: "center",
-                  marginTop: 20, // Adicionado para espaçamento
-                }} // style={styles.dashboardSubtitle}
+                  marginTop: 20, 
+                }} 
               >
                 Nenhum veículo cadastrado.
               </Text>
@@ -196,9 +185,8 @@ export default function VeiculosScreen() {
                 keyExtractor={(item) =>
                   item.id_veiculo?.toString() || item.placa
                 }
-                style={{ width: "100%", maxHeight: "70%" }} // Limita a altura da lista
+                style={{ width: "100%", maxHeight: "70%" }} 
                 renderItem={({ item }) => (
-                  // Card do Veículo
                   <View
                     style={{
                       width: "100%",
@@ -209,12 +197,12 @@ export default function VeiculosScreen() {
                       paddingVertical: 18,
                       borderRadius: 10,
                       marginBottom: 10,
-                    }} // style={[styles.dashboardButton, localStyles.vehicleCard]}
+                    }} 
                   >
                     <Ionicons
                       name="car-sport-outline"
                       size={24}
-                      style={{ marginRight: 15, color: "#1F7AF3" }} // style={styles.dashboardButtonIcon}
+                      style={{ marginRight: 15, color: "#1F7AF3" }} 
                     />
                     <View style={{ flex: 1 }}>
                       <Text
@@ -222,12 +210,12 @@ export default function VeiculosScreen() {
                           fontSize: 16,
                           fontWeight: "bold",
                           color: "#333",
-                        }} // style={localStyles.vehiclePlaca}
+                        }} 
                       >
                         {item.placa}
                       </Text>
                       <Text
-                        style={{ fontSize: 13, color: "#555" }} // style={localStyles.vehicleModel}
+                        style={{ fontSize: 13, color: "#555" }} 
                       >
                         {item.modelo} - {item.cor} ({item.passageiros_maximos}{" "}
                         lugares)
@@ -235,8 +223,8 @@ export default function VeiculosScreen() {
                     </View>
                     {/* Botão de Excluir */}
                     <TouchableOpacity
-                      style={{ padding: 5, marginLeft: 10 }} // style={localStyles.deleteButton}
-                      onPress={() => handleExcluir(item.id_veiculo)}
+                      style={{ padding: 5, marginLeft: 10 }} 
+                      onPress={() => handleExcluir(item.placa)}
                     >
                       <Ionicons
                         name="trash-outline"
@@ -264,7 +252,7 @@ export default function VeiculosScreen() {
                 shadowOpacity: 0.3,
                 shadowRadius: 5,
                 elevation: 6,
-              }} // style={[styles.loginButton, { marginTop: 20 }]}
+              }} 
               onPress={() => router.push("/registroVeiculo")}
             >
               <Text
@@ -272,7 +260,7 @@ export default function VeiculosScreen() {
                   color: "#FFFFFF",
                   fontWeight: "bold",
                   fontSize: 16,
-                }} // style={styles.buttonText}
+                }} 
               >
                 Adicionar Novo Veículo
               </Text>

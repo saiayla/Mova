@@ -1,12 +1,12 @@
-import { Ionicons } from "@expo/vector-icons"; // Para o ícone de voltar
+import { Ionicons } from "@expo/vector-icons"; 
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import { StatusBar } from "expo-status-bar"; // Para controlar a cor do texto da barra de status
+import { StatusBar } from "expo-status-bar"; 
 import React, { useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import {
-  KeyboardAvoidingView, // Para o teclado não cobrir os inputs
+  KeyboardAvoidingView, 
   Platform,
   StyleSheet,
   Text,
@@ -15,8 +15,7 @@ import {
   View,
 } from "react-native";
 
-import { login } from "./script"; // Deixei seu script
-// import { globalStyles as styles } from './style'; // Usando o novo style.js
+import { login } from "./script"; 
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -29,9 +28,9 @@ export default function LoginScreen() {
       colors={["#1974F3", "#85E0FA"]}
       style={styles.gradientBackground}
     >
-      {/* SafeAreaView garante que os botões e conteúdo fiquem na área visível */}
+      {/* garante que os botões e conteúdo fiquem na área visível */}
       <SafeAreaView style={styles.safeArea}>
-        {/* Botão de voltar com ícone, posicionado no canto */}
+        {/* Botão de voltar*/}
         <TouchableOpacity
           onPress={() => router.back()}
           style={styles.backButton}
@@ -39,7 +38,7 @@ export default function LoginScreen() {
           <Ionicons name="arrow-back-circle" size={40} color="white" />
         </TouchableOpacity>
 
-        {/* KeyboardAvoidingView ajusta a tela quando o teclado abre */}
+        {/* ajusta a tela quando o teclado abre */}
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}
           style={styles.container}
@@ -49,7 +48,7 @@ export default function LoginScreen() {
             <View style={styles.formContainer}>
               <Text style={styles.title}>Login</Text>
 
-              {/* Container para o input de E-mail */}
+              {/* E-mail */}
               <View style={styles.inputGroup}>
                 <Text style={styles.label}>E-mail</Text>
                 <TextInput
@@ -63,13 +62,13 @@ export default function LoginScreen() {
                 />
               </View>
 
-              {/* Container para o input de Senha */}
+              {/* Senha */}
               <View style={styles.inputGroup}>
                 <Text style={styles.label}>Senha</Text>
                 <TextInput
                   value={senha}
                   onChangeText={setSenha}
-                  secureTextEntry // Esconde a senha
+                  secureTextEntry 
                   style={styles.input}
                   placeholder="••••••••"
                   placeholderTextColor="#999"
@@ -101,7 +100,6 @@ export default function LoginScreen() {
           </View>
         </KeyboardAvoidingView>
 
-        {/* Deixa o texto da barra de status (hora, bateria) branco */}
         <StatusBar style="light" />
       </SafeAreaView>
     </LinearGradient>
@@ -111,16 +109,15 @@ export default function LoginScreen() {
 const COLORS = {
   primary: "#1F7AF3",
   white: "#FFFFFF",
-  lightGray: "#F7F8FA", // Fundo do input
-  mediumGray: "#999", // Texto do placeholder
-  darkGray: "#333", // Texto principal
+  lightGray: "#F7F8FA", 
+  mediumGray: "#999", 
+  darkGray: "#333", 
   textLabel: "#555",
   gradientStart: "#1974F3",
   gradientEnd: "#85E0FA",
 };
 
 const styles = StyleSheet.create({
-  // -- Layout Containers --
   gradientBackground: {
     flex: 1,
   },

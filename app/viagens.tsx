@@ -14,9 +14,8 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { BASE_URL } from "./script";
+import { BASE_URL, excluirViagem } from "./script";
 
-// ... (Restante do seu código e tipos Viagem) ...
 type Viagem = {
   id_viagem: number;
   local_saida: string;
@@ -26,14 +25,14 @@ type Viagem = {
   vagas_maximas: number;
   placa_veiculo: string;
   modelo: string;
+  valor_total: number;
+  km: number;
 };
 
 export default function MinhasViagensScreen() {
   const [viagens, setViagens] = useState<Viagem[]>([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
-
-  // ... (função carregarViagens e formatarData existentes) ...
 
   useEffect(() => {
     async function carregarViagens() {
@@ -45,7 +44,6 @@ export default function MinhasViagensScreen() {
           return;
         }
 
-        // Requisição GET /viagens (lista todas as viagens, o filtro de motorista deve estar no backend)
         const response = await fetch(`${BASE_URL}/viagens`, {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -82,16 +80,29 @@ export default function MinhasViagensScreen() {
     });
   };
 
-  // NOVO: Função para navegar para a tela de detalhes
   const handleVisualizarDetalhes = (id_viagem: number) => {
-    // Navega para a nova tela de detalhes, passando o ID da viagem
     router.replace({
-      pathname: "/viagemDetalhesMotorista", // Ajuste este caminho de rota se necessário
+      pathname: "/viagemDetalhesMotorista",
       params: { id_viagem: id_viagem.toString() },
     });
   };
 
-  // ... (Tela de Loading) ...
+  const handleExcluir = (id_viagem: number) => {
+    Alert.alert(
+      "Excluir Viagem",
+      "Tem certeza que quer excluir esta viagem?",
+      [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Excluir",
+          style: "destructive",
+          onPress: () => excluirViagem(id_viagem, setViagens),
+        },
+      ]
+    );
+  };
+
+
   if (loading) {
     return (
       <LinearGradient colors={["#1974F3", "#85E0FA"]} style={{ flex: 1 }}>
@@ -109,7 +120,6 @@ export default function MinhasViagensScreen() {
     );
   }
 
-  // Tela Principal
   return (
     <LinearGradient colors={["#1974F3", "#85E0FA"]} style={{ flex: 1 }}>
       <SafeAreaView
@@ -172,7 +182,6 @@ export default function MinhasViagensScreen() {
             </Text>
 
             {viagens.length === 0 ? (
-              // Mensagem de "Nenhuma viagem"
               <Text
                 style={{
                   fontSize: 16,
@@ -185,13 +194,11 @@ export default function MinhasViagensScreen() {
                 Nenhuma viagem encontrada.
               </Text>
             ) : (
-              // Lista de Viagens
               <FlatList
                 data={viagens}
                 keyExtractor={(item) => item.id_viagem.toString()}
                 style={{ width: "100%" }}
                 renderItem={({ item }) => (
-                  // ALTERADO: Tornar o item clicável
                   <TouchableOpacity
                     onPress={() => handleVisualizarDetalhes(item.id_viagem)}
                     style={{
@@ -210,7 +217,7 @@ export default function MinhasViagensScreen() {
                       size={24}
                       style={{ marginRight: 15, color: "#1F7AF3" }}
                     />
-                    <View style={{ flex: 1 }}>
+                    <View style={{ flex: 1, gap: 6 }}>
                       <Text
                         style={{
                           fontSize: 16,
@@ -231,10 +238,21 @@ export default function MinhasViagensScreen() {
                         Partida: {formatarData(item.horario_partida)}
                       </Text>
                       <Text style={{ fontSize: 13, color: "#555" }}>
-                        Vagas: {item.vagas_maximas} | Valor/km: R${" "}
-                        {item.valor_por_km?.toFixed(2)}
+                        Vagas: {item.vagas_maximas}
+                      </Text>
+                      <Text style={{ fontSize: 13, color: "#555" }}>
+                        Km: {item.km?.toFixed(2)} | Valor: R${" "}
+                        {item.valor_total?.toFixed(2)}
                       </Text>
                     </View>
+                    {/* Botão de Excluir */}
+                    <TouchableOpacity
+                      style={{ padding: 5, marginLeft: 10 }}
+                      onPress={() => handleExcluir(item.id_viagem)}
+                    >
+                      <Ionicons name="trash-outline" size={22} color="#D94343" />
+                    </TouchableOpacity>
+
                   </TouchableOpacity>
                 )}
               />

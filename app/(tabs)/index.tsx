@@ -1,26 +1,84 @@
-import React from 'react';
-import {Image, Text, TouchableOpacity } from 'react-native';
-import { globalStyles as styles } from '../style';
-import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter } from 'expo-router';
+import { LinearGradient } from "expo-linear-gradient";
+import { Link } from "expo-router";
+import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-export default function HomeScreen() {
-  const router = useRouter();
+const busImage = require("../../assets/images/bus.png");
 
+export default function TelaInicial() {
   return (
-    <LinearGradient colors={['#1974F3', '#85E0FA']} style={styles.container}>
-      <Image source={require('../../assets/images/bus.png')} style={styles.logo} resizeMode="contain"/>
-      <Text style={styles.title}>Bem-vindo ao Mova</Text>
-      <Text style={styles.subtitle}>Conecte-se com o seu destino.</Text>
-      <TouchableOpacity style={styles.Button} onPress={() => router.push('./cadastroPassageiro')}>
-        <Text style={styles.buttonText}>Sou passageiro</Text>
-      </TouchableOpacity>
-      <TouchableOpacity style={styles.Button} onPress={() => router.push('./cadastroMotorista')}>
-        <Text style={styles.buttonText}>Sou motorista</Text>
-      </TouchableOpacity>
-      <TouchableOpacity  onPress={() => router.push('./login')}>
-        <Text style={styles.buttonText}>Login</Text>
-      </TouchableOpacity>
-    </LinearGradient>
+    <SafeAreaView style={styles.container}>
+      <LinearGradient colors={["#1974F3", "#85E0FA"]} style={styles.container}>
+        <View style={styles.content}>
+          <Image source={busImage} style={styles.logo} resizeMode="contain" />
+          <Text style={styles.title}>Bem-vindo ao Mova</Text>
+          <Text style={{ color: "#FFF", fontSize: 18 }}>
+            Conectando você a seu motorista
+          </Text>
+        </View>
+        <View style={styles.parteBaixo}>
+          <Link href={"/login"} asChild>
+            <TouchableOpacity style={styles.botao}>
+              <Text style={styles.txtBotao}>Logar</Text>
+            </TouchableOpacity>
+          </Link>
+          <Link href={"/cadastro"} asChild>
+            <TouchableOpacity style={styles.botao}>
+              <Text style={styles.txtBotao}>Cadastrar-se</Text>
+            </TouchableOpacity>
+          </Link>
+        </View>
+      </LinearGradient>
+    </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  content: {
+    height: "60%",
+    width: "100%",
+    justifyContent: "flex-end",
+    alignItems: "flex-start",
+    paddingInline: 20,
+  },
+  logo: {
+    width: "70%",
+    height: 150,
+    marginBottom: 20,
+    alignSelf: "center",
+  },
+  title: {
+    fontSize: 46,
+    fontWeight: "bold",
+    marginBottom: 16,
+    color: "#FFF",
+  },
+  link: {
+    marginTop: 20,
+    color: "#007AFF",
+    fontSize: 16,
+  },
+  parteBaixo: {
+    width: "100%",
+    height: "40%",
+    padding: 20,
+    justifyContent: "flex-end",
+    alignItems: "center",
+    gap: 10,
+  },
+  botao: {
+    width: 350,
+    height: 60,
+    backgroundColor: "#FFF",
+    borderRadius: 5,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  txtBotao: {
+    fontSize: 16,
+    color: "#555555",
+  },
+});
